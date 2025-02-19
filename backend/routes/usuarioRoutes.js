@@ -22,4 +22,26 @@ router.delete('/:id', async (req, res) => {
     res.sendStatus(200);
 });
 
+// Rota para obter informações do usuário autenticado
+router.get('/me', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+
+        if (!token) {
+            return res.status(401).json({ error: 'Token não fornecido' });
+        }
+
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const usuario = await Usuario.findByPk(decoded.id, { attributes: { exclude: ['senha'] } });
+
+        if (!usuario) {
+            return res.status(404).json({ error: 'Usuário não encontrado' });
+        }
+
+        res.json(usuario);
+    } catch (error) {
+        res.status(401).json({ error: 'Token inválido ou expirado' });
+    }
+});
+
 module.exports = router;
