@@ -40,9 +40,6 @@ const sequelize = new Sequelize(
 
         await sequelize.sync({ force: false }); // 🔄 Garante que a estrutura da tabela está sincronizada
         console.log('✅ Banco sincronizado!');
-        
-        const [result] = await sequelize.query("SELECT * FROM usuarios;");
-        console.log('📌 Banco atual:', result);
 
     } catch (error) {
         console.error('❌ Erro ao conectar/sincronizar banco:', error);

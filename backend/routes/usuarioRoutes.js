@@ -1,6 +1,10 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const Usuario = require('../models/Usuario');
 const router = express.Router();
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 router.get('/', async (req, res) => {
     const usuarios = await Usuario.findAll();
@@ -26,13 +30,19 @@ router.delete('/:id', async (req, res) => {
 router.get('/me', async (req, res) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
+        console.log("Token recebido:", token); // Debug
 
         if (!token) {
             return res.status(401).json({ error: 'Token não fornecido' });
         }
 
         const decoded = jwt.verify(token, JWT_SECRET);
-        const usuario = await Usuario.findByPk(decoded.id, { attributes: { exclude: ['senha'] } });
+        console.log("Token decodificado:", decoded); // Debug
+
+        const usuario = await Usuario.findOne({
+            where: { cod_user: decoded.id },
+            attributes: { exclude: ["senha"] },
+        });
 
         if (!usuario) {
             return res.status(404).json({ error: 'Usuário não encontrado' });
@@ -40,6 +50,7 @@ router.get('/me', async (req, res) => {
 
         res.json(usuario);
     } catch (error) {
+        console.error("Erro ao validar token:", error); // Debug
         res.status(401).json({ error: 'Token inválido ou expirado' });
     }
 });
