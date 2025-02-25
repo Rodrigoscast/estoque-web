@@ -22,7 +22,8 @@ interface BarChartProps {
 }
 
 function getFormattedLabel(dateStr: string): string {
-  const date = new Date(dateStr);
+  // Força a data a ser interpretada como meia-noite no horário local
+  const date = new Date(dateStr + "T00:00:00");
   const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const dayOfWeek = days[date.getDay()];
   
@@ -41,9 +42,11 @@ export default function BarChart({ data, labels, daysPerPage = 7 }: BarChartProp
 
   const endIndex = startIndex + daysPerPage;
   const filteredData = data.slice(startIndex, endIndex);
+
   const filteredLabels = labels
     .slice(startIndex, endIndex)
     .map(label => getFormattedLabel(label));
+    
 
   const chartData = {
     labels: filteredLabels,
@@ -81,7 +84,7 @@ export default function BarChart({ data, labels, daysPerPage = 7 }: BarChartProp
   };
 
   return (
-    <div className="w-full">
+    <div className="w-4/5">
       <Bar data={chartData} options={options} />
       <div className="flex justify-center space-x-4 mt-4">
         <button

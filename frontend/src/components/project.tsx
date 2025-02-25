@@ -24,7 +24,7 @@ export default function Projeto({ id, nome, imagem, min, max }: ProjetoProps) {
 
   return (
     <div 
-      className="bg-white shadow-md rounded-lg p-4 flex flex-col items-center cursor-pointer hover:shadow-lg transition"
+      className="bg-white shadow-md rounded-lg p-4 flex flex-col items-center cursor-pointer hover:shadow-lg transition justify-end"
       onClick={handleClick}
     >
       {imagem && imagem !== "" ? (
@@ -34,10 +34,11 @@ export default function Projeto({ id, nome, imagem, min, max }: ProjetoProps) {
           width={150} 
           height={150} 
           unoptimized
-          className="rounded-md object-cover"
+          className="rounded-md object-cover w-3/5 h-auto"
+          priority
         />
       ) : (
-        <Cpu size={80} className="text-gray-400" />
+        <Cpu size={80} className="text-gray-400 w-2/6 h-auto" />
       )}
       
       <h2 className="text-lg font-semibold mt-2 text-center">{nome}</h2>
