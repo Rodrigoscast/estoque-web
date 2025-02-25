@@ -18,7 +18,7 @@ export default function LoginPage() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      router.push("/dashboard");
+      router.push("/projetos");
     }
   }, [router]);
 
@@ -27,7 +27,7 @@ export default function LoginPage() {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:3000/auth/login', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, senha })
@@ -39,7 +39,7 @@ export default function LoginPage() {
 
       const data = await response.json();
       localStorage.setItem('token', data.token);
-      router.push('/dashboard');
+      router.push('/projetos');
     } catch (err) {
       setError(err.message);
     }

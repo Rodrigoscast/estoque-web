@@ -2,6 +2,7 @@ const express = require('express');
 const sequelize = require('./config/database');
 require('dotenv').config();
 const authMiddleware = require('./middlewares/authMiddleware');
+const path = require('path');
 
 const authRoutes = require('./routes/authRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
@@ -9,6 +10,7 @@ const projetoRoutes = require('./routes/projetoRoutes');
 const pecaRoutes = require('./routes/pecaRoutes');
 const pecaProjetoRoutes = require('./routes/pecaProjetoRoutes');
 const pegouPecaRoutes = require('./routes/pegouPecaRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
 app.use(express.json());
@@ -23,6 +25,7 @@ app.use(cors({
 
 // Rotas públicas (sem autenticação)
 app.use('/auth', authRoutes);
+app.use('/uploads', express.static(path.join(__dirname, "uploads"))); // Adicionado para servir imagens
 
 // Rotas protegidas (aplica o authMiddleware globalmente)
 app.use(authMiddleware);
@@ -31,6 +34,7 @@ app.use('/projetos', projetoRoutes);
 app.use('/pecas', pecaRoutes);
 app.use('/peca_projeto', pecaProjetoRoutes);
 app.use('/pegou_peca', pegouPecaRoutes);
+app.use('/upload', uploadRoutes); // Aqui está correto, já que `uploadRoutes` usa apenas "/"
 
 sequelize.sync().then(() => {
     console.log('Banco de dados sincronizado 🚀');

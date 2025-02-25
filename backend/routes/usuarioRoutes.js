@@ -30,14 +30,12 @@ router.delete('/:id', async (req, res) => {
 router.get('/me', async (req, res) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
-        console.log("Token recebido:", token); // Debug
 
         if (!token) {
             return res.status(401).json({ error: 'Token não fornecido' });
         }
 
         const decoded = jwt.verify(token, JWT_SECRET);
-        console.log("Token decodificado:", decoded); // Debug
 
         const usuario = await Usuario.findOne({
             where: { cod_user: decoded.id },

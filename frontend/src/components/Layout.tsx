@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, LogOut, User, LayoutDashboard, Settings } from "lucide-react";
+import { Menu, LogOut, User, LayoutDashboard, Settings, Bolt, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Layout({ children }) {
@@ -16,7 +16,7 @@ export default function Layout({ children }) {
     async function fetchUser() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:3000/usuarios/me", {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/me`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -54,7 +54,9 @@ export default function Layout({ children }) {
   };
 
   const menuItems = [
-    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+    { name: "Projetos", icon: LayoutDashboard, path: "/projetos" },
+    { name: "Peças", icon: Bolt, path: "/pecas" },
+    { name: "Usuários", icon: Users, path: "/usuarios" },
     { name: "Configurações", icon: Settings, path: "/configuracoes" }
   ];
 
@@ -100,10 +102,10 @@ export default function Layout({ children }) {
       <div className="flex flex-1 overflow-hidden">
         {/* Menu Lateral */}
         <motion.aside
-          initial={{ width: menuOpen ? 64 : 20 }}
+          initial={{ width: menuOpen ? 256 : 80 }} // Define a largura inicial corretamente
           animate={{ width: menuOpen ? 256 : 80 }}
           transition={{ duration: 0.3 }}
-          className={`h-full bg-gray-900 text-white p-4 shadow-lg z-50 flex flex-col`}
+          className="h-full bg-gray-900 text-white p-4 shadow-lg z-50 flex flex-col"
         >
           <button
             className={`mb-6 text-white flex ${menuOpen ? 'justify-end' : 'justify-center'}`}
