@@ -11,6 +11,7 @@ const pecaRoutes = require('./routes/pecaRoutes');
 const pecaProjetoRoutes = require('./routes/pecaProjetoRoutes');
 const pegouPecaRoutes = require('./routes/pegouPecaRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const relatorioRoutes = require('./routes/relatorioRoutes');
 
 const app = express();
 app.use(express.json());
@@ -34,7 +35,8 @@ app.use('/projetos', projetoRoutes);
 app.use('/pecas', pecaRoutes);
 app.use('/peca_projeto', pecaProjetoRoutes);
 app.use('/pegou_peca', pegouPecaRoutes);
-app.use('/upload', uploadRoutes); // Aqui está correto, já que `uploadRoutes` usa apenas "/"
+app.use('/upload', uploadRoutes);
+app.use('/relatorios', relatorioRoutes);
 
 sequelize.sync().then(() => {
     console.log('Banco de dados sincronizado 🚀');

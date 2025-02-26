@@ -3,42 +3,61 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Layout from '@/components/Layout';
+import withAuth from "@/components/hoc/withAuth";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Modal } from '@/components/ui/modal';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-export default function UsuarioPage() {
+function UsuarioPage() {
   const router = useRouter();
   const { id } = useParams();
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editData, setEditData] = useState({ nome: '', email: '' });
 
   useEffect(() => {
     async function fetchUsuario() {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}`);
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+  
+        if (!response.ok) {
+          throw new Error('Usuário não encontrado ou desativado');
+        }
+  
         const data = await response.json();
         setUsuario(data);
         setEditData({ nome: data.nome, email: data.email });
       } catch (error) {
         console.error('Erro ao buscar usuário:', error);
+        setTimeout(() => router.push('/usuarios'), 100); // Pequeno delay para evitar conflitos de renderização
       } finally {
         setLoading(false);
       }
     }
-
+  
     if (id) fetchUsuario();
-  }, [id]);
+  }, [id, router]);
 
   const handleEdit = async () => {
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          "Authorization": `Bearer ${token}`,
+        },
         body: JSON.stringify(editData),
       });
 
@@ -52,10 +71,14 @@ export default function UsuarioPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
-        method: 'DELETE',
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}/desativar`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) throw new Error('Erro ao excluir usuário');
@@ -73,7 +96,7 @@ export default function UsuarioPage() {
         <h1 className="text-2xl font-bold">Usuário: {usuario?.nome}</h1>
         <div className="flex gap-2">
           <Button onClick={() => setIsEditModalOpen(true)}>Editar Dados</Button>
-          <Button variant="destructive" onClick={handleDelete}>Excluir Usuário</Button>
+          <Button variant="destructive" onClick={() => setIsDeleteModalOpen(true)}>Excluir Usuário</Button>
         </div>
       </div>
 
@@ -99,34 +122,52 @@ export default function UsuarioPage() {
       </div>
 
       {/* Modal de Edição */}
-      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Editar Usuário</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label>Nome</Label>
-                <Input
-                  type="text"
-                  value={editData.nome}
-                  onChange={(e) => setEditData({ ...editData, nome: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={editData.email}
-                  onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-                />
-              </div>
-              <Button onClick={handleEdit}>Salvar Alterações</Button>
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+            <DialogDescription>Altere os dados do usuário e salve as mudanças.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nome</Label>
+              <Input
+                type="text"
+                value={editData.nome}
+                onChange={(e) => setEditData({ ...editData, nome: e.target.value })}
+              />
             </div>
-          </CardContent>
-        </Card>
-      </Modal>
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={editData.email}
+                onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+              />
+            </div>
+            <Button onClick={handleEdit}>Salvar Alterações</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Confirmação de Exclusão */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tem certeza ? Esta ação é irreversível!</DialogTitle>
+            <DialogDescription className='flex'>
+              Os registros deste usuário permanecerão no sistema para histórico.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleDelete}>Confirmar Exclusão</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </Layout>
   );
 }
+
+export default withAuth(UsuarioPage);

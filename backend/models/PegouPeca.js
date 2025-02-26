@@ -18,6 +18,6 @@ const PegouPeca = sequelize.define('PegouPeca', {
 
 PegouPeca.belongsTo(Usuario, { foreignKey: 'cod_user' });
 PegouPeca.belongsTo(Projeto, { foreignKey: 'cod_projeto' });
-PegouPeca.belongsTo(Peca, { foreignKey: 'cod_peca' });
+PegouPeca.belongsTo(Peca, { foreignKey: 'cod_peca', as: 'peca' });
 
 module.exports = PegouPeca;

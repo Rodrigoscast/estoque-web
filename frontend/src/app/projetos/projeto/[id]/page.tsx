@@ -11,10 +11,11 @@ import BarChart from '@/components/graficos/BarChart';
 import PieChart from '@/components/graficos/PieChart';
 import MateriaisList from '@/components/MateriaisList';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { useUser } from "@/contexts/UserContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 interface ProjetoType {
   cod_projeto: number;
@@ -66,9 +67,11 @@ function ProjetoPage() {
   const [loadingFaltantes, setLoadingFaltantes] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [pecasDisponiveis, setPecasDisponiveis] = useState<Peca[]>([]);
-  const [pecaSelecionada, setPecaSelecionada] = useState(null);
-  const [quantidade, setQuantidade] = useState(1);
+  const [selectedPeca, setSelectedPeca] = useState<Material | null>(null);
+  const [quantidade, setQuantidade] = useState(0);
+
+  const [refreshKey, setRefreshKey] = useState(0);
+
 
   const [historicoRetiradas, setHistoricoRetiradas] = useState<{ 
     cod_pegou_peca: number;
@@ -107,7 +110,7 @@ function ProjetoPage() {
     }
 
     fetchProjeto();
-  }, [params.id, router]);
+  }, [params.id, router, refreshKey]);
 
   useEffect(() => {
     async function fetchGrafico() {
@@ -134,7 +137,7 @@ function ProjetoPage() {
       }
     }
     fetchGrafico();
-  }, [params.id]);
+  }, [params.id, refreshKey]);
 
   useEffect(() => {
     async function fetchGraficoPizza() {
@@ -160,7 +163,7 @@ function ProjetoPage() {
       }
     }
     fetchGraficoPizza();
-  }, [params.id]);
+  }, [params.id, refreshKey]);
 
   // Fetch dos materiais retirados
   useEffect(() => {
@@ -187,7 +190,7 @@ function ProjetoPage() {
       }
     }
     fetchMateriaisRetirados();
-  }, [params.id]);
+  }, [params.id, refreshKey]);
 
   // Fetch dos materiais faltantes
   useEffect(() => {
@@ -214,7 +217,7 @@ function ProjetoPage() {
       }
     }
     fetchMateriaisFaltantes();
-  }, [params.id]);
+  }, [params.id, refreshKey]);
 
   useEffect(() => {
     async function fetchHistoricoRetiradas() {
@@ -240,46 +243,41 @@ function ProjetoPage() {
       }
     }
     fetchHistoricoRetiradas();
-  }, [params.id]);
+}, [params.id, refreshKey]);
 
-  useEffect(() => {
-    async function fetchMateriais() {
+async function handleRetirarPeca() {
+    if (selectedPeca && quantidade > 0) {      
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pecas`, {
-          method: "GET",
-          headers: { "Authorization": `Bearer ${token}` },
+
+        const dataPegou = new Date();
+        const dataFormatada = new Date(dataPegou.getTime() - dataPegou.getTimezoneOffset() * 60000)
+            .toISOString();
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({
+                cod_projeto: params.id,
+                cod_peca: selectedPeca.cod_peca,
+                cod_user: Number(userCode),
+                quantidade: Number(quantidade),
+                data_pegou: dataFormatada,
+            }),
         });
-        if (!response.ok) return;
-        const data = await response.json();
-        setPecasDisponiveis(data);
+
+        if (!response.ok) throw new Error("Erro ao retirar peça");
+
+        setModalOpen(false);
+
+        // Atualiza o histórico de retiradas sem dar reload na página
+        setRefreshKey(prevKey => prevKey + 1); 
+
       } catch (error) {
-        console.error("Erro ao buscar materiais:", error);
+        console.error(error);
       }
     }
-    fetchMateriais();
-  }, [params.id]);
-
-  async function handleRetirarPeca() {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/retirar_peca`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({
-          cod_projeto: params.id,
-          cod_peca: pecaSelecionada,
-          cod_user: Number(userCode),
-          quantidade: Number(quantidade),
-          data_pegou: new Date().toISOString(),
-        }),
-      });
-      if (!response.ok) throw new Error("Erro ao retirar peça");
-      setModalOpen(false);
-    } catch (error) {
-      console.error(error);
-    }
-  }
+}
 
   if (loadingProjeto || loadingGrafico || loadingGraficoPizza || loadingRetirados || loadingFaltantes || loadingHistorico) return <p>Carregando...</p>;
   if (!projeto) return <p>Projeto não encontrado.</p>;
@@ -288,30 +286,54 @@ function ProjetoPage() {
 
   return (
     <Layout>
-      <div className="flex flex-wrap gap-6 justify-center">
+    
+      <div className="flex w-full justify-end items-center pl-8 pb-8">
         <Button onClick={() => setModalOpen(true)} className="mt-4">Retirar Peças</Button>
-        
-        <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Retirar Peça</DialogTitle>
-            </DialogHeader>
-            <Select onValueChange={setPecaSelecionada}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma peça" />
-              </SelectTrigger>
-              <SelectContent>
-                {pecasDisponiveis.map((peca) => (
+      </div>
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Retirar Peças</DialogTitle>
+            <DialogDescription>
+              Confirme a retirada da peça antes de continuar.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Select onValueChange={(value) => {
+            const pecaSelecionada = materiaisFaltantes.find(p => p.cod_peca === Number(value));
+            setSelectedPeca(pecaSelecionada || null);
+            setQuantidade(1);
+          }}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma peça" />
+            </SelectTrigger>
+            <SelectContent>
+              {materiaisFaltantes
+                .filter(peca => peca.nome.toLowerCase())
+                .map((peca) => (
                   <SelectItem key={peca.cod_peca} value={peca.cod_peca.toString()}>
-                    {peca.nome}
+                    {peca.nome} (Limite: {peca.quantidade})
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input type="number" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} min={1} />
-            <Button onClick={handleRetirarPeca}>Confirmar</Button>
-          </DialogContent>
-        </Dialog>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {selectedPeca && (
+            <Input
+              type="number"
+              value={quantidade}
+              onChange={(e) => setQuantidade(Math.min(Number(e.target.value), selectedPeca.quantidade))}
+              min={1}
+              max={selectedPeca.quantidade}
+              placeholder="Quantidade"
+            />
+          )}
+
+          <Button onClick={handleRetirarPeca} disabled={!selectedPeca || quantidade <= 0}>Confirmar Retirada</Button>
+        </DialogContent>
+      </Dialog>
+      
+      <div className="flex flex-wrap gap-6 justify-center">
         <div className="flex flex-col items-center justify-between w-full md:w-[30%] bg-white p-4 rounded-2xl shadow-lg min-h-[150px]">
           <h1 className="text-2xl font-bold mb-4">{projeto.nome}</h1>
           {projeto.imagem && projeto.imagem !== "" ? (

@@ -2,6 +2,8 @@ const express = require('express');
 const { Sequelize } = require('sequelize'); // Certifique-se de ter acesso ao Sequelize configurado
 const PegouPeca = require('../models/PegouPeca');
 const routerPegouPeca = express.Router();
+const moment = require("moment-timezone");
+const Projeto = require('../models/Projeto');
 
 // Rota para listar todos os registros de retirada de peças
 routerPegouPeca.get('/', async (req, res) => {
@@ -14,16 +16,44 @@ routerPegouPeca.get('/', async (req, res) => {
     }
 });
 
-// Rota para criar um novo registro de retirada de peça
-routerPegouPeca.post('/', async (req, res) => {
+routerPegouPeca.post("/", async (req, res) => {
+    const transaction = await PegouPeca.sequelize.transaction(); // Inicia uma transação
+
     try {
-        const pegouPeca = await PegouPeca.create(req.body);
+        let { data_pegou, cod_projeto, quantidade, ...dados } = req.body;
+
+        // Converte corretamente a data ISO 8601 para o fuso de Brasília
+        data_pegou = moment.tz(data_pegou, "America/Sao_Paulo").toDate();
+
+        // Criar o registro de retirada da peça
+        const pegouPeca = await PegouPeca.create(
+            { ...dados, cod_projeto, quantidade, data_pegou },
+            { transaction }
+        );
+
+        // Buscar o projeto atual para obter pecas_atuais
+        const projeto = await Projeto.findByPk(cod_projeto, { transaction });
+
+        if (!projeto) {
+            throw new Error("Projeto não encontrado.");
+        }
+
+        // Atualizar o número de peças atuais no projeto
+        await projeto.update(
+            { pecas_atuais: projeto.pecas_atuais + quantidade },
+            { transaction }
+        );
+
+        await transaction.commit(); // Confirma a transação
         res.json(pegouPeca);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erro ao criar registro.' });
+        await transaction.rollback(); // Desfaz a transação em caso de erro
+        console.error("Erro ao criar registro:", error);
+        res.status(500).json({ error: "Erro ao criar registro." });
     }
 });
+
+
 
 // Rota para atualizar um registro de retirada de peça
 routerPegouPeca.put('/:cod_pegou_peca', async (req, res) => {

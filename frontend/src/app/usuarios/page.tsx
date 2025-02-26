@@ -6,7 +6,7 @@ import Layout from "@/components/Layout";
 import withAuth from "@/components/hoc/withAuth";
 import UsuarioCard from "@/components/UsuarioCard";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
@@ -106,6 +106,9 @@ function Usuarios() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Cadastro de Usuário</DialogTitle>
+              <DialogDescription>
+                Confirme os dados do usuário antes de cadastrar.
+              </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleCadastro} className="space-y-4">

@@ -14,7 +14,7 @@ export default function UsuarioCard({ cod_user, nome, email }: UsuarioCardProps)
   return (
     <Card
       className="flex items-center gap-4 p-6 cursor-pointer hover:shadow-lg transition"
-      onClick={() => router.push(`/usuarios/${cod_user}`)}
+      onClick={() => router.push(`/usuarios/usuario/${cod_user}`)}
     >
       <UserIcon className="w-10 h-10 text-gray-500 p-0 m-2 w-1/5" />
       <CardContent className="flex flex-col p-0 pl-2 w-full">

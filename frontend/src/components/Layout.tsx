@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, LogOut, User, LayoutDashboard, Settings, Bolt, Users } from "lucide-react";
+import { Menu, LogOut, User, LayoutDashboard, Cog, Users, FileArchive } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/contexts/UserContext";
 
@@ -59,9 +59,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const menuItems = [
     { name: "Projetos", icon: LayoutDashboard, path: "/projetos" },
-    { name: "Peças", icon: Bolt, path: "/pecas" },
+    { name: "Peças", icon: Cog, path: "/pecas" },
     { name: "Usuários", icon: Users, path: "/usuarios" },
-    { name: "Configurações", icon: Settings, path: "/configuracoes" }
+    { name: "Relatórios", icon: FileArchive, path: "/relatorios" }
   ];
 
   return (
