@@ -54,7 +54,7 @@ INSERT INTO projeto (nome, pecas_totais, pecas_atuais, imagem, data_entrada) VAL
 
 DROP TABLE pegou_peca;
 
-INSERT INTO pegou_peca (cod_user, cod_projeto, cod_peca, quantidade, data_pegou) VALUES (2, 2, 1, 10, '2025-02-24 14:58:27.026704');
+INSERT INTO pegou_peca (cod_user, cod_projeto, cod_peca, quantidade, data_pegou) VALUES (2, 2, 3, 10, '2025-02-24 14:58:27.026704');
 INSERT INTO pegou_peca (cod_user, cod_projeto, cod_peca, quantidade, data_pegou) VALUES (2, 2, 2, 14, '2025-02-24 14:58:27.026704');
 INSERT INTO pegou_peca (cod_user, cod_projeto, cod_peca, quantidade, data_pegou) VALUES (2, 2, 3, 32, '2025-02-23 14:58:27.026704');
 INSERT INTO pegou_peca (cod_user, cod_projeto, cod_peca, quantidade, data_pegou) VALUES (3, 2, 4, 12, '2025-02-22 14:58:27.026704');
@@ -122,7 +122,7 @@ SELECT * FROM peca_projeto;
 
 SELECT * FROM pegou_peca WHERE data_pegou::date = '2023-06-18';
 
-INSERT INTO peca_projeto (cod_projeto, cod_peca, quantidade) VALUES (2, 1, 30);
+INSERT INTO peca_projeto (cod_projeto, cod_peca, quantidade) VALUES (2, 10, 30);
 INSERT INTO peca_projeto (cod_projeto, cod_peca, quantidade) VALUES (2, 2, 10);
 INSERT INTO peca_projeto (cod_projeto, cod_peca, quantidade) VALUES (2, 3, 5);
 INSERT INTO peca_projeto (cod_projeto, cod_peca, quantidade) VALUES (2, 4, 35);
@@ -131,3 +131,17 @@ INSERT INTO peca_projeto (cod_projeto, cod_peca, quantidade) VALUES (2, 6, 46);
 INSERT INTO peca_projeto (cod_projeto, cod_peca, quantidade) VALUES (2, 7, 23);
 INSERT INTO peca_projeto (cod_projeto, cod_peca, quantidade) VALUES (2, 8, 65);
 INSERT INTO peca_projeto (cod_projeto, cod_peca, quantidade) VALUES (2, 9, 12);
+
+
+ALTER TABLE usuarios
+ADD COLUMN ativado boolean;
+
+ALTER TABLE usuarios 
+ALTER COLUMN ativado SET DEFAULT TRUE;
+
+UPDATE usuarios 
+SET ativado = TRUE 
+WHERE ativado IS NULL;
+
+ALTER TABLE usuarios 
+ALTER COLUMN ativado SET NOT NULL;

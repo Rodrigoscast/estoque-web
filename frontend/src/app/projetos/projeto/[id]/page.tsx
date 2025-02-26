@@ -1,4 +1,3 @@
-// app/projeto/[id]/page.tsx
 'use client';
 
 import { useEffect, useState } from "react";
@@ -11,6 +10,11 @@ import { Cpu } from "lucide-react";
 import BarChart from '@/components/graficos/BarChart';
 import PieChart from '@/components/graficos/PieChart';
 import MateriaisList from '@/components/MateriaisList';
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { useUser } from "@/contexts/UserContext";
 
 interface ProjetoType {
   cod_projeto: number;
@@ -37,6 +41,11 @@ interface Material {
   quantidade: number;
 }
 
+interface Peca {
+  cod_peca: number;
+  nome: string;
+}
+
 function ProjetoPage() {
   const params = useParams();
   const router = useRouter();
@@ -56,6 +65,11 @@ function ProjetoPage() {
   const [materiaisFaltantes, setMateriaisFaltantes] = useState<Material[]>([]);
   const [loadingFaltantes, setLoadingFaltantes] = useState(true);
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [pecasDisponiveis, setPecasDisponiveis] = useState<Peca[]>([]);
+  const [pecaSelecionada, setPecaSelecionada] = useState(null);
+  const [quantidade, setQuantidade] = useState(1);
+
   const [historicoRetiradas, setHistoricoRetiradas] = useState<{ 
     cod_pegou_peca: number;
     usuario: string;
@@ -64,6 +78,8 @@ function ProjetoPage() {
     data_pegou: string;
   }[]>([]);
   const [loadingHistorico, setLoadingHistorico] = useState(true);
+
+  const { userCode } = useUser();
 
   useEffect(() => {
     async function fetchProjeto() {
@@ -226,6 +242,45 @@ function ProjetoPage() {
     fetchHistoricoRetiradas();
   }, [params.id]);
 
+  useEffect(() => {
+    async function fetchMateriais() {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pecas`, {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        setPecasDisponiveis(data);
+      } catch (error) {
+        console.error("Erro ao buscar materiais:", error);
+      }
+    }
+    fetchMateriais();
+  }, [params.id]);
+
+  async function handleRetirarPeca() {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/retirar_peca`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({
+          cod_projeto: params.id,
+          cod_peca: pecaSelecionada,
+          cod_user: Number(userCode),
+          quantidade: Number(quantidade),
+          data_pegou: new Date().toISOString(),
+        }),
+      });
+      if (!response.ok) throw new Error("Erro ao retirar peça");
+      setModalOpen(false);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   if (loadingProjeto || loadingGrafico || loadingGraficoPizza || loadingRetirados || loadingFaltantes || loadingHistorico) return <p>Carregando...</p>;
   if (!projeto) return <p>Projeto não encontrado.</p>;
 
@@ -233,86 +288,108 @@ function ProjetoPage() {
 
   return (
     <Layout>
-      <div className="flex flex-col gap-10">
-        <div className="flex flex-wrap gap-6 justify-between">
-          <div className="flex flex-col items-center justify-start w-full md:flex-1 bg-white p-6 rounded-3xl shadow-xl">
-            <h1 className="text-2xl font-bold mb-4">{projeto.nome}</h1>
-            {projeto.imagem && projeto.imagem !== "" ? (
-              <Image
-                src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${projeto.imagem}`}
-                alt={projeto.nome}
-                width={250}
-                height={250}
-                className="rounded-md object-cover w-4/5 h-auto"
-                priority
-              />
-            ) : (
-              <Cpu size={150} className="text-gray-400 w-2/5 h-auto" />
-            )}
-            {/* Barra de progresso */}
-            <div className="w-full mt-4">
-              <div className="bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full"
-                  style={{ width: `${progressPercentage}%` }}
-                ></div>
-              </div>
-              <div className="text-xs text-gray-600 mt-1 text-center">
-                {projeto.pecas_atuais} / {projeto.pecas_totais}
-              </div>
+      <div className="flex flex-wrap gap-6 justify-center">
+        <Button onClick={() => setModalOpen(true)} className="mt-4">Retirar Peças</Button>
+        
+        <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Retirar Peça</DialogTitle>
+            </DialogHeader>
+            <Select onValueChange={setPecaSelecionada}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma peça" />
+              </SelectTrigger>
+              <SelectContent>
+                {pecasDisponiveis.map((peca) => (
+                  <SelectItem key={peca.cod_peca} value={peca.cod_peca.toString()}>
+                    {peca.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input type="number" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} min={1} />
+            <Button onClick={handleRetirarPeca}>Confirmar</Button>
+          </DialogContent>
+        </Dialog>
+        <div className="flex flex-col items-center justify-between w-full md:w-[30%] bg-white p-4 rounded-2xl shadow-lg min-h-[150px]">
+          <h1 className="text-2xl font-bold mb-4">{projeto.nome}</h1>
+          {projeto.imagem && projeto.imagem !== "" ? (
+            <Image
+              src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${projeto.imagem}`}
+              alt={projeto.nome}
+              width={250}
+              height={250}
+              className="rounded-md object-cover w-4/5 h-auto"
+              priority
+            />
+          ) : (
+            <Cpu size={150} className="text-gray-400 w-2/5 h-auto" />
+          )}
+          {/* Barra de progresso */}
+          <div className="w-full mt-4">
+            <div className="bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-500 h-2 rounded-full"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
             </div>
-          </div>
-          <div className="flex flex-col items-center justify-start w-full md:flex-1 bg-white p-6 rounded-3xl shadow-xl">
-            <h1 className="text-2xl font-bold mb-4">Relação de Peças Por Dia</h1>
-            <BarChart labels={grafico.labels} data={grafico.data} />
-          </div>
-          <div className="flex flex-col items-center justify-start w-full md:flex-1 bg-white p-6 rounded-3xl shadow-xl">
-            <h1 className="text-2xl font-bold mb-4">Relação de Peças Por Usuário</h1>
-            <PieChart labels={graficoPizza.labels} data={graficoPizza.data} />
+            <div className="text-xs text-gray-600 mt-1 text-center">
+              {projeto.pecas_atuais} / {projeto.pecas_totais}
+            </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-6 justify-between">
-          <div className="flex flex-col items-center justify-start w-full md:flex-1 bg-white p-6 rounded-3xl shadow-xl">
-            <h1 className="text-2xl font-bold mb-4">Peças Já Retiradas</h1>
-            <div className="p-6 w-full">
-              <MateriaisList materiais={materiaisRetirados.map(m => ({
-                id: m.cod_peca,
-                nome: m.nome,
-                quantidade: m.quantidade
-              }))} />
-            </div>
+        <div className="flex flex-col items-center justify-between w-full md:w-[60%] bg-white p-4 rounded-2xl shadow-lg min-h-[150px]">
+          <h1 className="text-2xl font-bold mb-4">Relação de Peças Por Dia</h1>
+          <BarChart labels={grafico.labels} data={grafico.data} />
+        </div>
+        <div className="flex flex-col items-center justify-between w-full md:w-[40%] bg-white p-4 rounded-2xl shadow-lg min-h-[150px]">
+          <h1 className="text-2xl font-bold mb-4">Relação de Peças Por Usuário</h1>
+          <PieChart labels={graficoPizza.labels} data={graficoPizza.data} />
+        </div>
+        <div className="flex flex-col items-center justify-start w-full md:w-[25%] bg-white p-4 rounded-2xl shadow-lg min-h-[150px]">
+          <h1 className="text-xl font-bold mb-4">Peças Já Retiradas</h1>
+          <div className="p-6 w-full">
+            <MateriaisList materiais={materiaisRetirados.map(m => ({
+              id: m.cod_peca,
+              nome: m.nome,
+              quantidade: m.quantidade
+            }))} />
           </div>
-          <div className="flex flex-col items-center justify-start w-full md:flex-1 bg-white p-6 rounded-3xl shadow-xl">
-            <h1 className="text-2xl font-bold mb-4">Peças Que Faltam Retirar</h1>
-            <div className="p-6 w-full">
-              <MateriaisList materiais={materiaisFaltantes.map(m => ({
-                id: m.cod_peca,
-                nome: m.nome,
-                quantidade: m.quantidade // aqui representa a quantidade que falta retirar
-              }))} />
-            </div>
+        </div>
+        <div className="flex flex-col items-center justify-start w-full md:w-[25%] bg-white p-4 rounded-2xl shadow-lg min-h-[150px]">
+          <h1 className="text-xl font-bold mb-4">Peças Que Faltam Retirar</h1>
+          <div className="p-6 w-full">
+            <MateriaisList materiais={materiaisFaltantes.map(m => ({
+              id: m.cod_peca,
+              nome: m.nome,
+              quantidade: m.quantidade // aqui representa a quantidade que falta retirar
+            }))} />
           </div>
-          <div className="flex flex-col items-center justify-start w-full md:flex-1 bg-white p-6 rounded-3xl shadow-xl">
-            <h1 className="text-2xl font-bold mb-4">Histórico de Peças Retiradas</h1>
+        </div>
+        <div className="flex flex-col items-center justify-start w-full md:w-[90%] bg-white p-4 rounded-2xl shadow-lg min-h-[150px]">
+          <h1 className="text-xl font-bold mb-4">Histórico de Peças Retiradas</h1>
 
-            {loadingHistorico ? (
-              <p>Carregando histórico...</p>
-            ) : historicoRetiradas.length === 0 ? (
-              <p>Nenhuma peça retirada ainda.</p>
-            ) : (
-              <div className="w-full max-h-80 overflow-y-auto">
-                <ul className="w-full">
-                  {historicoRetiradas.map((retirada) => (
-                    <li key={retirada.cod_pegou_peca} className="border-b py-2 flex justify-between">
-                      <span className="font-semibold">{retirada.usuario}</span>
-                      <span>{retirada.peca} ({retirada.quantidade}x)</span>
-                      <span className="text-gray-500">{new Date(retirada.data_pegou).toLocaleString()}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          {loadingHistorico ? (
+            <p>Carregando histórico...</p>
+          ) : historicoRetiradas.length === 0 ? (
+            <p>Nenhuma peça retirada ainda.</p>
+          ) : (
+            <div className="w-full max-h-80 overflow-y-auto">
+              <ul className="w-full p-5">
+                {historicoRetiradas.map((retirada) => (
+                  <li 
+                    key={retirada.cod_pegou_peca} 
+                    className="border-b py-2 grid grid-cols-3 gap-4 text-left"
+                  >
+                    <span className="font-semibold min-w-[100px]">{retirada.usuario}</span>
+                    <span className="min-w-[100px]">{retirada.peca} ({retirada.quantidade}x)</span>
+                    <span className="text-gray-500 min-w-[100px]">{new Date(retirada.data_pegou).toLocaleString()}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </Layout>

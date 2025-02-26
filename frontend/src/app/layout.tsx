@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { UserProvider } from "@/contexts/UserContext";
 
 const openSans = Open_Sans({
   variable: "--font-open-sans",  // Defina a variável CSS para Open Sans
@@ -36,7 +37,9 @@ export default function RootLayout({
       <body
         className={`${openSans.variable} antialiased`}
       >
-        {children}
+        <UserProvider>
+          {children}
+        </UserProvider>
       </body>
     </html>
   );

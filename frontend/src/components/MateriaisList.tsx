@@ -13,7 +13,7 @@ interface MateriaisListProps {
 export default function MateriaisList({ materiais }: MateriaisListProps) {
   return (
     <div className="max-h-80 overflow-y-auto w-full">
-      <ul className="space-y-3">
+      <ul className="space-y-3 p-4">
         {materiais.map((material) => (
           <li
             key={material.id}

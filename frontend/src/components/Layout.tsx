@@ -4,11 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, LogOut, User, LayoutDashboard, Settings, Bolt, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@/contexts/UserContext";
 
-export default function Layout({ children }) {
+
+export default function Layout({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [userName, setUserName] = useState("Carregando...");
+  const { userCode, setUserCode } = useUser();
   const pathname = usePathname();
   const userMenuRef = useRef(null);
 
@@ -28,6 +31,7 @@ export default function Layout({ children }) {
         if (!response.ok) throw new Error(data.error || "Erro desconhecido");
 
         setUserName(data.nome.split(" ")[0]);
+        setUserCode(data.cod_user);
       } catch (error) {
         console.error("Erro ao buscar usuário:", error.message);
       }

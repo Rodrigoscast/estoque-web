@@ -20,7 +20,12 @@ const Usuario = sequelize.define('Usuario', {
     senha: {
         type: DataTypes.STRING,
         allowNull: false,
-    }
+    },
+    ativado: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true
+    },
 }, {
     tableName: 'usuarios',  // Define o nome exato da tabela
     timestamps: false,      // Desativa os campos createdAt e updatedAt
