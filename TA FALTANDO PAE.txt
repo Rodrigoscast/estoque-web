@@ -8,3 +8,4 @@ Adicionar Logout
 Análise do estoque
 Alertas de estoque
 Adicionar imagem de peças funcional
+Adicionar projeto e subprojeto
