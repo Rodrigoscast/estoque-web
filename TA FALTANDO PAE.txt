@@ -1,12 +1,13 @@
-O que ta faltando no bagulho:
+O que tá faltando no bagulho:
 
-Graficos de cada usuário
-Divisão de projetos ativos e finalizados E coolocar orgdem alfavbetica
-Alertas de estoque
+Gráficos de cada usuário							1
+Melhorar dados e permissões do usuário						2
+Divisão de projetos ativos e finalizados E colocar em ordem alfabética		3
+Alertas de estoque								8
+Análise do estoque								7
+Botão de mostrar projetos finalizados						4
+Botão de mudar o modo que o estoque é mostrado					5
+Adicionar imagem de peças funcional						6
+Adicionar Logout								9
 
-APP
-
-
-AGORA:
-Página de peças
-Imagem das peças
+CRIAR O APP PARA CADASTRO E RETIRADA DE PEÇAS!!!

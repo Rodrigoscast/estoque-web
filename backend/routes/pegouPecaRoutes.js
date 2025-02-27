@@ -4,6 +4,7 @@ const PegouPeca = require('../models/PegouPeca');
 const routerPegouPeca = express.Router();
 const moment = require("moment-timezone");
 const Projeto = require('../models/Projeto');
+const Usuario = require('../models/Usuario');
 
 // Rota para listar todos os registros de retirada de peças
 routerPegouPeca.get('/', async (req, res) => {
@@ -105,6 +106,34 @@ routerPegouPeca.get('/grafico/quantidades-por-data/:cod_projeto', async (req, re
     }
 });
 
+//Peças por dia busca por usuários
+routerPegouPeca.get('/grafico/quantidades-por-usuario/:cod_user', async (req, res) => {
+    try {
+        const { cod_user } = req.params;
+        const sequelize = PegouPeca.sequelize;
+
+        const [results, metadata] = await sequelize.query(`
+            SELECT 
+                data_pegou::date AS data,
+                SUM(quantidade) AS total
+            FROM pegou_peca
+            WHERE cod_user = :cod_user
+            GROUP BY data_pegou::date
+            ORDER BY data_pegou::date;
+        `, {
+            replacements: { cod_user: req.params.cod_user},
+        });
+
+        const labels = results.map(row => row.data);
+        const data = results.map(row => parseInt(row.total, 10));
+
+        res.json({ labels, data });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao buscar dados para o gráfico.' });
+    }
+});
+
 routerPegouPeca.get('/grafico/pizza/por-usuario/:cod_projeto', async (req, res) => {
     try {
         const { cod_projeto } = req.params;
@@ -125,6 +154,33 @@ routerPegouPeca.get('/grafico/pizza/por-usuario/:cod_projeto', async (req, res) 
     const data = results.map(row => parseInt(row.total, 10));
   
     res.json({ labels, data });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao buscar dados para o gráfico de pizza.' });
+    }
+});
+
+routerPegouPeca.get('/grafico/pizza/por-projeto/:cod_user', async (req, res) => {
+    try {
+        const { cod_user } = req.params;
+        const sequelize = PegouPeca.sequelize;
+
+        const [results, metadata] = await sequelize.query(`
+            SELECT pr.nome AS label, SUM(p.quantidade) AS total
+            FROM pegou_peca p
+            JOIN projeto pr ON p.cod_projeto = pr.cod_projeto
+            WHERE p.cod_user = :cod_user
+            GROUP BY pr.nome
+            ORDER BY total DESC;
+        `, {
+            replacements: { cod_user: req.params.cod_user },
+        });
+
+        // Mapeia os resultados para arrays de labels e dados
+        const labels = results.map(row => row.label);
+        const data = results.map(row => parseInt(row.total, 10));
+
+        res.json({ labels, data });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erro ao buscar dados para o gráfico de pizza.' });
@@ -207,6 +263,33 @@ routerPegouPeca.get('/historico-retiradas/:cod_projeto', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erro ao buscar histórico de peças retiradas.' });
+    }
+});
+routerPegouPeca.get('/historico-retiradas/por-usuario/:cod_user', async (req, res) => {
+    try {
+        const { cod_user } = req.params;
+        const sequelize = PegouPeca.sequelize;
+
+        const [results, metadata] = await sequelize.query(`
+            SELECT 
+                p.cod_pegou_peca, 
+                pr.nome AS projeto,
+                pc.nome AS peca,
+                p.quantidade,
+                p.data_pegou
+            FROM pegou_peca p
+            JOIN projeto pr ON p.cod_projeto = pr.cod_projeto
+            JOIN pecas pc ON p.cod_peca = pc.cod_peca
+            WHERE p.cod_user = :cod_user
+            ORDER BY p.data_pegou DESC;
+        `, {
+            replacements: { cod_user },
+        });
+
+        res.json(results);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao buscar histórico de peças retiradas por usuário.' });
     }
 });
 

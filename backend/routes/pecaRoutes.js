@@ -4,14 +4,9 @@ const routerPeca = express.Router();
 
 routerPeca.get('/', async (req, res) => {
     try {
-        console.log("Buscando todas as peças..."); // Log de início da operação
-        
         const pecas = await Peca.findAll();
-        
-        console.log(`Peças encontradas: ${pecas.length}`); // Log da quantidade de peças retornadas
         res.json(pecas);
     } catch (error) {
-        console.error("Erro ao buscar peças:", error); // Log do erro
         res.status(500).json({ error: 'Erro ao buscar peças' });
     }
 });
