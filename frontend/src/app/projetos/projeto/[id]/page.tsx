@@ -93,6 +93,7 @@ function ProjetoPage() {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
         if (!response.ok) {
@@ -122,6 +123,7 @@ function ProjetoPage() {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
         if (!response.ok) {
@@ -148,6 +150,7 @@ function ProjetoPage() {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
         if (!response.ok) {
@@ -175,6 +178,7 @@ function ProjetoPage() {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
         if (!response.ok) {
@@ -202,6 +206,7 @@ function ProjetoPage() {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
         if (!response.ok) {
@@ -228,6 +233,7 @@ function ProjetoPage() {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
         if (!response.ok) {
@@ -256,7 +262,8 @@ async function handleRetirarPeca() {
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })},
             body: JSON.stringify({
                 cod_projeto: params.id,
                 cod_peca: selectedPeca.cod_peca,

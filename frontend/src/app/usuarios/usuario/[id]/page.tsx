@@ -56,6 +56,7 @@ function UsuarioPage() {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
   
@@ -85,6 +86,7 @@ function UsuarioPage() {
         headers: { 
           'Content-Type': 'application/json',
           "Authorization": `Bearer ${token}`,
+          ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
         },
         body: JSON.stringify(editData),
       });
@@ -106,6 +108,7 @@ function UsuarioPage() {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
+          ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
         },
       });
 
@@ -126,6 +129,7 @@ function UsuarioPage() {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
         if (!response.ok) {
@@ -152,6 +156,7 @@ function UsuarioPage() {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
         if (!response.ok) {
@@ -178,6 +183,7 @@ function UsuarioPage() {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
         if (!response.ok) {

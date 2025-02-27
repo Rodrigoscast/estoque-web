@@ -24,6 +24,7 @@ function RelatorioPecasMaisUtilizadas() {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
         const data = await response.json();

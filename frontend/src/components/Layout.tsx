@@ -24,6 +24,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
 

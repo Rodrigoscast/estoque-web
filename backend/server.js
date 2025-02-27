@@ -12,6 +12,7 @@ const pecaProjetoRoutes = require('./routes/pecaProjetoRoutes');
 const pegouPecaRoutes = require('./routes/pegouPecaRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const relatorioRoutes = require('./routes/relatorioRoutes');
+const endpointRoutes = require('./routes/endpointRoutes');
 
 const app = express();
 app.use(express.json());
@@ -21,12 +22,13 @@ const cors = require('cors');
 // Adicione isso antes das rotas
 app.use(cors({
     // origin: 'http://localhost:3001', // Altere para o endereço do seu frontend
-    // credentials: true, // Permite envio de cookies e headers de autenticação
+    credentials: true, // Permite envio de cookies e headers de autenticação
 }));
 
 // Rotas públicas (sem autenticação)
 app.use('/auth', authRoutes);
-app.use('/uploads', express.static(path.join(__dirname, "uploads"))); // Adicionado para servir imagens
+app.use('/uploads', express.static(path.join(__dirname, "uploads")));
+app.use('/endpoint', endpointRoutes);
 
 // Rotas protegidas (aplica o authMiddleware globalmente)
 app.use(authMiddleware);

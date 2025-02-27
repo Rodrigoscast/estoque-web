@@ -73,6 +73,7 @@ export default function Projeto({ id, nome, imagem, min, max }: ProjetoProps) {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
+          ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
         },
       });
 
@@ -96,6 +97,7 @@ export default function Projeto({ id, nome, imagem, min, max }: ProjetoProps) {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
+          ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
         },
       });
 
