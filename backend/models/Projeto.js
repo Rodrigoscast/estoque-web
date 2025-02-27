@@ -7,7 +7,17 @@ const Projeto = sequelize.define('Projeto', {
     pecas_totais: { type: DataTypes.INTEGER, allowNull: false },
     pecas_atuais: { type: DataTypes.INTEGER, allowNull: false },
     imagem: { type: DataTypes.STRING(500) },
-    data_entrada: { type: DataTypes.DATE }
+    data_entrada: { type: DataTypes.DATE },
+    ativo: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true
+    },
+    concluido: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    },
 }, {
     tableName: 'projeto',  // Evita que o Sequelize tente pluralizar o nome da tabela
     timestamps: false       // Desativa createdAt e updatedAt

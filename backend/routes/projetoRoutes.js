@@ -1,15 +1,51 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const Projeto = require('../models/Projeto');
 const routerProjeto = express.Router();
 
-// Buscar todos os projetos
-routerProjeto.get('/', async (req, res) => {
-    const projetos = await Projeto.findAll();
-    res.json(projetos);
-}); 
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Middleware para verificar se o projeto está ativo
+const VerificarProjetoAtivo = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return res.status(401).json({ error: 'Token não fornecido' });
+
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const projeto = await Projeto.findOne({ where: { cod_projeto: req.params.id, ativo: true } });
+
+        if (!projeto) {
+            return res.status(403).json({ error: 'Acesso negado. Projeto desativado ou não encontrado.' });
+        }
+
+        req.projeto = projeto;
+        next();
+    } catch (error) {
+        console.error("Erro na verificação do projeto:", error);
+        res.status(401).json({ error: 'Token inválido ou expirado' });
+    }
+};
+
+// Buscar projetos (ativos ou concluídos)
+routerProjeto.get("/", async (req, res) => {
+    try {
+        const { concluidos } = req.query;
+        const filtroConcluido = concluidos === "true"; // true -> concluídos, false -> ativos
+    
+        const projetos = await Projeto.findAll({
+            where: { concluido: filtroConcluido, ativo: true },
+            order: [["nome", "ASC"]],
+        });
+  
+        res.json(projetos);
+    } catch (error) {
+        console.error("Erro ao buscar projetos:", error);
+        res.status(500).json({ error: "Erro ao buscar projetos" });
+    }
+});
 
 // Buscar um projeto específico por ID
-routerProjeto.get('/:id', async (req, res) => {
+routerProjeto.get('/:id', VerificarProjetoAtivo, async (req, res) => {
     try {
         const projeto = await Projeto.findOne({ where: { cod_projeto: req.params.id } });
         if (!projeto) {
@@ -32,7 +68,7 @@ routerProjeto.post('/', async (req, res) => {
 });
 
 // Atualizar um projeto
-routerProjeto.put('/:id', async (req, res) => {
+routerProjeto.put('/:id', VerificarProjetoAtivo, async (req, res) => {
     try {
         await Projeto.update(req.body, { where: { cod_projeto: req.params.id } });
         res.sendStatus(200);
@@ -42,12 +78,48 @@ routerProjeto.put('/:id', async (req, res) => {
 });
 
 // Deletar um projeto
-routerProjeto.delete('/:id', async (req, res) => {
+routerProjeto.delete('/:id', VerificarProjetoAtivo, async (req, res) => {
     try {
         await Projeto.destroy({ where: { cod_projeto: req.params.id } });
         res.sendStatus(200);
     } catch (error) {
         res.status(500).json({ error: 'Erro ao deletar o projeto' });
+    }
+});
+
+// Desativar um projeto
+routerProjeto.put('/:id/desativar', async (req, res) => {
+    try {
+        const projeto = await Projeto.findOne({ where: { cod_projeto: req.params.id, concluido: false } });
+
+        if (!projeto) {
+            return res.status(404).json({ error: 'Projeto não encontrado ou já está desativado' });
+        }
+
+        await Projeto.update({ ativo: false }, { where: { cod_projeto: req.params.id } });
+
+        res.json({ message: 'Projeto desativado com sucesso' });
+    } catch (error) {
+        console.error("Erro ao desativar projeto:", error);
+        res.status(500).json({ error: 'Erro ao desativar projeto' });
+    }
+});
+
+// Concluir um projeto
+routerProjeto.put('/:id/concluir', VerificarProjetoAtivo, async (req, res) => {
+    try {
+        const projeto = await Projeto.findOne({ where: { cod_projeto: req.params.id, ativo: true } });
+
+        if (!projeto) {
+            return res.status(404).json({ error: 'Projeto não encontrado ou já concluído' });
+        }
+
+        await Projeto.update({ concluido: true }, { where: { cod_projeto: req.params.id } });
+
+        res.json({ message: 'Projeto concluído com sucesso' });
+    } catch (error) {
+        console.error("Erro ao concluir projeto:", error);
+        res.status(500).json({ error: 'Erro ao concluir projeto' });
     }
 });
 

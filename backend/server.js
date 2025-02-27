@@ -20,8 +20,8 @@ const cors = require('cors');
 
 // Adicione isso antes das rotas
 app.use(cors({
-    origin: 'http://localhost:3001', // Altere para o endereço do seu frontend
-    credentials: true, // Permite envio de cookies e headers de autenticação
+    // origin: 'http://localhost:3001', // Altere para o endereço do seu frontend
+    // credentials: true, // Permite envio de cookies e headers de autenticação
 }));
 
 // Rotas públicas (sem autenticação)
@@ -40,5 +40,7 @@ app.use('/relatorios', relatorioRoutes);
 
 sequelize.sync().then(() => {
     console.log('Banco de dados sincronizado 🚀');
-    app.listen(3000, () => console.log('Servidor rodando na porta 3000!'));
+    app.listen(3000, '0.0.0.0', () => {
+        console.log("Servidor rodando na porta 3000");
+    });
 }).catch(err => console.error('Erro ao sincronizar banco de dados:', err));

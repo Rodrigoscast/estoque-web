@@ -277,7 +277,16 @@ async function handleRetirarPeca() {
         console.error(error);
       }
     }
-}
+  }
+
+  // Se o projeto não for encontrado, redireciona
+  useEffect(() => {
+    if (!loadingProjeto && !projeto) {
+      setTimeout(() => {
+        router.push("/projetos"); // Substitua pelo destino correto
+      }, 1000);
+    }
+  }, [loadingProjeto, projeto]);
 
   if (loadingProjeto || loadingGrafico || loadingGraficoPizza || loadingRetirados || loadingFaltantes || loadingHistorico) return <p>Carregando...</p>;
   if (!projeto) return <p>Projeto não encontrado.</p>;
@@ -287,9 +296,14 @@ async function handleRetirarPeca() {
   return (
     <Layout>
     
-      <div className="flex w-full justify-end items-center pl-8 pb-8">
-        <Button onClick={() => setModalOpen(true)} className="mt-4">Retirar Peças</Button>
-      </div>
+      {projeto && projeto.pecas_atuais < projeto.pecas_totais && (
+        <div className="flex w-full justify-end items-center pl-8 pb-8">
+          <Button onClick={() => setModalOpen(true)} className="mt-4">
+            Retirar Peças
+          </Button>
+        </div>
+      )}
+
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
