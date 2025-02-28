@@ -1,11 +1,36 @@
-O que tá faltando no bagulho:					
-
 CRIAR O APP PARA CADASTRO E RETIRADA DE PEÇAS!!!
 
-Futuro: 
-Adicionar permissões por usuário
-Adicionar Logout
-Análise do estoque
-Alertas de estoque
-Adicionar imagem de peças funcional
-Adicionar projeto e subprojeto
+
+>Projeto e Subprojeto
+-Criar campo na tabela
+-Criar rota que traz subprojetos de um projeto
+-Atualizar front para mostrar os subprojetos
+-Criar pagina apenas para subprojetos
+-Atualizar rotas do projeto geral
+
+>Análise de estoque
+-média da quantidade de peças em um projeto, quanto mais novo o projeto maior o peso (limite 12 meses)
+-média de quantos projetos fazem por mês, quanto mais recente o mês maior o peso (limite 12 meses)
+-recorrência de compra de estoque
+-recomendação de estoque ideal (quanto falta daquela peça pra ela estar no azul)
+-colocar o mínimo de peças necessária para ajudar no calculo, esse mínimo é a média de todos os mínimos (peso coerente e 12 meses)
+
+>Alertas de estoque
+-enviar e-mails de aviso quando peças entrarem em crítico ou super crítico
+
+>Lógica de adicionar peças
+-verificar se existe a chance de aparecer uma peça nova e inesperada
+
+>Aplicativo
+-adicionar opção de retirar peças no estilo carrinho
+-melhorar aparência do aplicativo
+
+>Integração
+-encontrar um jeito de enviar os projetos para o meu backend
+-no executável adicionar opção de enviar projeto, escolhendo qual é o principal e quais são os subprojetos
+
+Clean do clean:
+projeto e sub na quinta a noite
+app em 1h
+analise de estoque e alerta em mais 1h
+integração eu me viro pra fazer em umas 4h

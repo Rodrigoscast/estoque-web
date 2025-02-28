@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Cpu, XCircle, CheckCircle } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { Cpu } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ProjetoProps {
   id: number;
@@ -15,109 +15,65 @@ interface ProjetoProps {
   max: number;
 }
 
+interface Peca {
+  cod_projeto: number;
+  nome: string;
+  imagem: string;
+}
+
 export default function Projeto({ id, nome, imagem, min, max }: ProjetoProps) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [modalTipo, setModalTipo] = useState<"concluir" | "excluir" | null>(null);
-  const [erroModalOpen, setErroModalOpen] = useState(false);
-  const [sucessoModalOpen, setSucessoModalOpen] = useState<"concluir" | "excluir" | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [pecas, setPecas] = useState<Peca[]>([]);
+  const [showMenu, setShowMenu] = useState(false);
+  const [animateMenu, setAnimateMenu] = useState(false);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false);
-      }
+    if (modalOpen) {
+      const fetchPecas = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/projetos/${id}/pecas`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+                ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
+              },
+            }
+          );
+          const data = await response.json();
+          setPecas(data);
+        } catch (err) {
+          console.error("Erro ao buscar peças:", err);
+        }
+      };
+  
+      fetchPecas();
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [modalOpen, id]);
+  
 
-  const handleClick = (event: React.MouseEvent) => {
-    if (menuOpen || modalTipo) {
-      event.stopPropagation();
-      return;
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (menuOpen) {
+      setShowMenu(true);
+      timer = setTimeout(() => setAnimateMenu(true), 50); // Pequeno atraso para iniciar animação
+    } else {
+      setAnimateMenu(false);
+      setTimeout(() => setShowMenu(false), 300); // Tempo da animação antes de esconder
     }
-    router.push(`/projetos/projeto/${id}`);
-  };
-
-  const handleContextMenu = (event: React.MouseEvent) => {
-    event.preventDefault();
-    setMenuOpen(true);
-  };
-
-  const handleOptionClick = (tipo: "concluir" | "excluir", event: React.MouseEvent) => {
-    event.stopPropagation();
-    setModalTipo(tipo);
-    setMenuOpen(false);
-  };
-
-  const handleCloseModal = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    setModalTipo(null);
-  };
-
-  const handleConcluirProjeto = async (event: React.MouseEvent) => {
-    event.stopPropagation();
-
-    if (min !== max) {
-      setModalTipo(null);
-      setErroModalOpen(true);
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${id}/concluir`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
-        },
-      });
-
-      if (!response.ok) throw new Error("Erro ao concluir projeto");
-
-      setModalTipo(null);
-      setSucessoModalOpen("concluir"); // Abre a modal de sucesso
-    } catch (error) {
-      console.error(error);
-      setErroModalOpen(true);
-    }
-  };
-
-  const handleExcluirProjeto = async (event: React.MouseEvent) => {
-    event.stopPropagation();
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${id}/desativar`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
-        },
-      });
-
-      if (!response.ok) throw new Error("Erro ao excluir projeto");
-
-      setModalTipo(null);
-      setSucessoModalOpen("excluir"); // Abre a modal de sucesso
-    } catch (error) {
-      console.error(error);
-      setErroModalOpen(true);
-    }
-  };
-
-  const progressPercentage = max > 0 ? Math.min((min / max) * 100, 100) : 0;
+    return () => clearTimeout(timer);
+  }, [menuOpen]);
 
   return (
     <div 
       className="bg-white shadow-md rounded-lg p-4 flex flex-col items-center cursor-pointer hover:shadow-lg transition justify-end relative"
-      onClick={handleClick}
-      onContextMenu={handleContextMenu}
+      onMouseEnter={() => setMenuOpen(true)}
+      onMouseLeave={() => setMenuOpen(false)}
     >
       {imagem && imagem !== "" ? (
         <Image 
@@ -139,7 +95,7 @@ export default function Projeto({ id, nome, imagem, min, max }: ProjetoProps) {
         <div className="bg-gray-200 rounded-full h-2">
           <div 
             className="bg-blue-500 h-2 rounded-full" 
-            style={{ width: `${progressPercentage}%` }}
+            style={{ width: `${Math.min((min / max) * 100, 100)}%` }}
           ></div>
         </div>
         <div className="text-xs text-gray-600 mt-1 text-center">
@@ -147,90 +103,62 @@ export default function Projeto({ id, nome, imagem, min, max }: ProjetoProps) {
         </div>
       </div>
 
-      {menuOpen && (
-        <div ref={menuRef} className="absolute right-2 top-2 bg-white border rounded-md shadow-lg z-10">
-          <button 
-            className="block px-4 py-2 text-sm hover:bg-gray-100 w-full text-left"
-            onClick={(event) => handleOptionClick("concluir", event)}
+      {showMenu && (
+        <div 
+          className={`absolute rounded-lg inset-0 bg-black/50 flex items-center justify-between p-4 transition-all duration-300 ease-in-out
+            ${animateMenu ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+        >
+          <Button 
+            className="bg-blue-500 hover:bg-blue-600 text-white w-1/2 m-1"
+            onClick={() => router.push(`/projetos/projeto/${id}`)}
           >
-            Concluir Projeto
-          </button>
-          <button 
-            className="block px-4 py-2 text-sm hover:bg-gray-100 w-full text-left text-red-500"
-            onClick={(event) => handleOptionClick("excluir", event)}
+            Projeto
+          </Button>
+          <Button 
+            className="bg-green-500 hover:bg-green-600 text-white w-1/2 m-1"
+            onClick={() => setModalOpen(true)}
           >
-            Excluir Projeto
-          </button>
+            Peças
+          </Button>
         </div>
       )}
 
-      {modalTipo && (
-        <Dialog open={!!modalTipo} onOpenChange={handleCloseModal}>
-          <DialogContent onClick={(event) => event.stopPropagation()}>
-            <DialogHeader>
-              <DialogTitle>
-                {modalTipo === "concluir" ? "Concluir Projeto" : "Excluir Projeto"}
-              </DialogTitle>
-            </DialogHeader>
-            <p>
-              {modalTipo === "concluir"
-                ? "Tem certeza de que deseja concluir este projeto? Todas as peças devem ser retiradas."
-                : "Tem certeza de que deseja excluir este projeto? Esta ação não pode ser desfeita."}
-            </p>
-            <DialogFooter>
-              <Button variant="outline" onClick={handleCloseModal}>Cancelar</Button>
-              <Button
-                className={modalTipo === "concluir" ? "bg-blue-500 hover:bg-blue-600 text-white" : "bg-red-500 hover:bg-red-600 text-white"}
-                onClick={modalTipo === "concluir" ? handleConcluirProjeto : handleExcluirProjeto}
-              >
-                {modalTipo === "concluir" ? "Finalizar" : "Excluir"}
-              </Button>
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Peças do Projeto</DialogTitle>
+          </DialogHeader>
+          <ul className="space-y-2">
+            {pecas.length > 0 ? (
+              pecas.map((peca) => (
+                <li 
+                  key={peca.cod_projeto} 
+                  className="p-2 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 flex flex-line justify-between items-center"
+                  onClick={() => router.push(`/projetos/projeto/${peca.cod_projeto}`)}
+                >
+                  {peca.nome}
 
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Modal de erro */}
-      {erroModalOpen && (
-        <Dialog open={erroModalOpen} onOpenChange={() => {
-          setErroModalOpen(false);
-          handleCloseModal;
-        }}>
-          
-          <DialogContent className="text-center">
-            <DialogHeader>
-              <DialogTitle><XCircle className="text-red-500 w-24 h-24 mx-auto mb-2" /></DialogTitle>
-            </DialogHeader>
-            <p>Para finalizar o projeto, todas as peças devem ser retiradas.</p>
-            <DialogFooter>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Modal de sucesso */}
-      {sucessoModalOpen && (
-        <Dialog open={!!sucessoModalOpen} onOpenChange={() => {
-          setSucessoModalOpen(null);
-          handleCloseModal;
-        }}>
-          <DialogContent className="text-center">
-            <CheckCircle className="text-green-500 w-12 h-12 mx-auto mb-2" />
-            <DialogHeader>
-              <DialogTitle className="text-green-500">
-                {sucessoModalOpen === "concluir" ? "Projeto Concluído" : "Projeto Excluído"}
-              </DialogTitle>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => {
-                setSucessoModalOpen(null);
-                handleCloseModal;
-              }}>Fechar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+                  {peca.imagem && peca.imagem !== "" ? (
+                    <Image 
+                      src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${peca.imagem}`} 
+                      alt={nome} 
+                      width={50} 
+                      height={50}
+                      unoptimized
+                      className="rounded-md object-cover h-auto"
+                      priority
+                    />
+                  ) : (
+                    <Cpu className="text-gray-400 h-auto" />
+                  )}
+                </li>
+              ))
+            ) : (
+              <p>Nenhuma peça encontrada.</p>
+            )}
+          </ul>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

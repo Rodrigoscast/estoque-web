@@ -295,6 +295,48 @@ async function handleRetirarPeca() {
     }
   }, [loadingProjeto, projeto]);
 
+  const handleConcluirProjeto = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/id/concluir`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
+        },
+      });
+
+      if (!response.ok) throw new Error("Erro ao concluir projeto");
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleExcluirProjeto = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/id/desativar`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
+        },
+      });
+
+      if (!response.ok) throw new Error("Erro ao excluir projeto");
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   if (loadingProjeto || loadingGrafico || loadingGraficoPizza || loadingRetirados || loadingFaltantes || loadingHistorico) return <p>Carregando...</p>;
   if (!projeto) return <p>Projeto não encontrado.</p>;
 
@@ -332,7 +374,7 @@ async function handleRetirarPeca() {
               {materiaisFaltantes
                 .filter(peca => peca.nome.toLowerCase())
                 .map((peca) => (
-                  <SelectItem key={peca.cod_peca} value={peca.cod_peca.toString()}>
+                  <SelectItem key={`${peca.cod_peca}-${peca.nome}`} value={peca.cod_peca.toString()}>
                     {peca.nome} (Limite: {peca.quantidade})
                   </SelectItem>
               ))}
@@ -422,7 +464,7 @@ async function handleRetirarPeca() {
               <ul className="w-full p-5">
                 {historicoRetiradas.map((retirada) => (
                   <li 
-                    key={retirada.cod_pegou_peca} 
+                  key={`${retirada.cod_pegou_peca}-${retirada.peca}-${retirada.quantidade}`}
                     className="border-b py-2 grid grid-cols-3 gap-4 text-left"
                   >
                     <span className="font-semibold min-w-[100px]">{retirada.usuario}</span>

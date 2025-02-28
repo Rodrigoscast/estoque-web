@@ -16,7 +16,7 @@ export default function MateriaisList({ materiais }: MateriaisListProps) {
       <ul className="space-y-3 p-4">
         {materiais.map((material) => (
           <li
-            key={material.id}
+            key={`${material.id}-${material.nome}`}
             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
           >
             <span className="font-medium">{material.nome}</span>

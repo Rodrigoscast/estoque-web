@@ -18,6 +18,11 @@ const Projeto = sequelize.define('Projeto', {
         allowNull: false,
         defaultValue: false
     },
+    projeto_main: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    }
 }, {
     tableName: 'projeto',  // Evita que o Sequelize tente pluralizar o nome da tabela
     timestamps: false       // Desativa createdAt e updatedAt

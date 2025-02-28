@@ -35,6 +35,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         setUserCode(data.cod_user);
       } catch (error) {
         console.error("Erro ao buscar usuário:", error.message);
+        logout()
       }
     }
     fetchUser();
@@ -60,7 +61,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const menuItems = [
     { name: "Projetos", icon: LayoutDashboard, path: "/projetos" },
-    { name: "Peças", icon: Cog, path: "/pecas" },
+    { name: "Estoque", icon: Cog, path: "/estoque" },
     { name: "Usuários", icon: Users, path: "/usuarios" },
     { name: "Relatórios", icon: FileArchive, path: "/relatorios" }
   ];

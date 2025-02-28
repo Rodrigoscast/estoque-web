@@ -33,7 +33,7 @@ routerProjeto.get("/", async (req, res) => {
         const filtroConcluido = concluidos === "true"; // true -> concluídos, false -> ativos
     
         const projetos = await Projeto.findAll({
-            where: { concluido: filtroConcluido, ativo: true },
+            where: { concluido: filtroConcluido, ativo: true, projeto_main: 0 },
             order: [["nome", "ASC"]],
         });
   
@@ -54,6 +54,19 @@ routerProjeto.get('/:id', VerificarProjetoAtivo, async (req, res) => {
         res.json(projeto);
     } catch (error) {
         res.status(500).json({ error: 'Erro ao buscar o projeto' });
+    }
+});
+
+// Buscar todos os projetos cujo projeto_main seja igual ao id passado
+routerProjeto.get('/:id/pecas', async (req, res) => {
+    try {
+        const subprojetos = await Projeto.findAll({
+            where: { projeto_main: req.params.id, ativo: true }
+        });
+        res.json(subprojetos);
+    } catch (error) {
+        console.error("Erro ao buscar subprojetos:", error);
+        res.status(500).json({ error: 'Erro ao buscar subprojetos' });
     }
 });
 

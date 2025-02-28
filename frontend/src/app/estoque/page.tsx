@@ -1,5 +1,6 @@
 'use client';
 
+import Image from "next/image";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
@@ -34,7 +35,7 @@ function PecasPage() {
         const data = await response.json();
         setPecas(data.sort((a, b) => a.nome.localeCompare(b.nome)));
       } catch (error) {
-        console.error('Erro ao buscar peças:', error);
+        console.error('Erro ao buscar estoque:', error);
       } finally {
         setLoading(false);
       }
@@ -56,7 +57,7 @@ function PecasPage() {
         body: JSON.stringify({ quantidade: pecaSelecionada.quantidade + quantidadeAdicionada }),
       });
 
-      if (!response.ok) throw new Error('Erro ao atualizar quantidade da peça');
+      if (!response.ok) throw new Error('Erro ao atualizar quantidade de estoque');
       
       setPecas(prevPecas => prevPecas.map(p =>
         p.cod_peca === pecaSelecionada.cod_peca ? { ...p, quantidade: p.quantidade + quantidadeAdicionada } : p
@@ -78,12 +79,12 @@ function PecasPage() {
     return "bg-white";
   };
 
-  if (loading) return <p>Carregando peças...</p>;
+  if (loading) return <p>Carregando estoque...</p>;
 
   return (
     <Layout>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Gerenciamento de Peças</h1>
+        <h1 className="text-2xl font-bold">Gerenciamento de Estoque</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -100,7 +101,19 @@ function PecasPage() {
               <CardTitle>{peca.nome}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col items-center">
-              <Cog className="w-16 h-16 text-gray-200" />
+              {peca.imagem && peca.imagem !== "" ? (
+                <Image 
+                  src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${peca.imagem}`} 
+                  alt={peca.nome} 
+                  width={150} 
+                  height={150} 
+                  unoptimized
+                  className="rounded-md object-cover w-3/5 h-auto"
+                  priority
+                />
+              ) : (
+                <Cog className="w-16 h-16 text-gray-200" />
+              )}
               <p className="mt-2">Quantidade: {peca.quantidade}</p>
             </CardContent>
           </Card>
