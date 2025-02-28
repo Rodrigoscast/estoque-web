@@ -25,23 +25,27 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json',
-          ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' }) 
+        headers: {
+          'Content-Type': 'application/json',
+          ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
         },
         body: JSON.stringify({ email, senha })
       });
-      
+
       if (!response.ok) {
         throw new Error('Credenciais inválidas');
       }
 
-      const data = await response.json();
-      localStorage.setItem('token', data.token);
+      const data = await response.json().json(); // ❗ Correção: Transformar resposta em JSON
+
+      localStorage.setItem('token', data.token); // ❗ Correção: Usar `data.token` corretamente
+
       router.push('/projetos');
+
     } catch (err) {
       setError(err.message);
     }

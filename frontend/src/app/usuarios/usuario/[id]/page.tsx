@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import BarChart from '@/components/graficos/BarChart';
 import PieChart from '@/components/graficos/PieChart';
+import { customFetch } from '@/utils/CustomFetch';
 
 
 interface GraficoType {
@@ -23,10 +24,15 @@ interface PieChartDataType {
   data: number[];
 }
 
+interface Usuario {
+  nome: string;
+  email: string;
+}
+
 function UsuarioPage() {
   const router = useRouter();
   const { id } = useParams();
-  const [usuario, setUsuario] = useState(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -51,7 +57,7 @@ function UsuarioPage() {
     async function fetchUsuario() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -64,7 +70,7 @@ function UsuarioPage() {
           throw new Error('Usuário não encontrado ou desativado');
         }
   
-        const data = await response.json();
+        const data = await response.json()
         setUsuario(data);
         setEditData({ nome: data.nome, email: data.email });
       } catch (error) {
@@ -81,7 +87,7 @@ function UsuarioPage() {
   const handleEdit = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
+      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -103,7 +109,7 @@ function UsuarioPage() {
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}/desativar`, {
+      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}/desativar`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -124,7 +130,7 @@ function UsuarioPage() {
       try {
         const token = localStorage.getItem("token");
         // Inclua o id do projeto na URL:
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/grafico/quantidades-por-usuario/${id}`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/grafico/quantidades-por-usuario/${id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -136,7 +142,7 @@ function UsuarioPage() {
           console.error("Erro ao buscar dados do gráfico");
           return;
         }
-        const data = await response.json();
+        const data = await response.json()
         setGrafico(data);
       } catch (error) {
         console.error("Erro ao buscar dados do gráfico:", error);
@@ -151,7 +157,7 @@ function UsuarioPage() {
     async function fetchGraficoPizza() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/grafico/pizza/por-projeto/${id}`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/grafico/pizza/por-projeto/${id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -163,7 +169,7 @@ function UsuarioPage() {
           console.error("Erro ao buscar dados do gráfico de pizza");
           return;
         }
-        const data = await response.json();
+        const data = await response.json()
         setGraficoPizza(data);
       } catch (error) {
         console.error("Erro ao buscar dados do gráfico de pizza:", error);
@@ -178,7 +184,7 @@ function UsuarioPage() {
     async function fetchHistoricoRetiradas() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/historico-retiradas/por-usuario/${id}`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/historico-retiradas/por-usuario/${id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -190,7 +196,7 @@ function UsuarioPage() {
           console.error("Erro ao buscar histórico de retiradas");
           return;
         }
-        const data = await response.json();
+        const data = await response.json()
         setHistoricoRetiradas(data);
       } catch (error) {
         console.error("Erro ao buscar histórico de retiradas:", error);
@@ -227,7 +233,7 @@ function UsuarioPage() {
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Peças Retiradas por Dia</CardTitle>
+              <CardTitle className="text-xl font-bold mb-4">Peças Retiradas por Dia</CardTitle>
             </CardHeader>
             <CardContent className='flex items-center justify-center h-4/5'>
               <BarChart labels={grafico.labels} data={grafico.data} />
@@ -236,7 +242,7 @@ function UsuarioPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Distribuição de Peças por Projeto</CardTitle>
+              <CardTitle className="text-xl font-bold mb-4">Distribuição de Peças por Projeto</CardTitle>
             </CardHeader>
             <CardContent className='flex items-start justify-center'>
               <PieChart labels={graficoPizza.labels} data={graficoPizza.data} />
@@ -246,21 +252,25 @@ function UsuarioPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Histórico de Retiradas</CardTitle>
+            <CardTitle className="text-xl font-bold mb-4">Histórico de Retiradas</CardTitle>
           </CardHeader>
           <CardContent>
-            {historicoRetiradas.length === 0 ? (
+            {loadingHistorico? (
+              <p className="text-gray-500">Carregando histórico...</p>
+            ) : historicoRetiradas.length === 0 ? (
               <p className="text-gray-500">Nenhuma peça retirada ainda.</p>
             ) : (
-              <ul className="space-y-2">
-                {historicoRetiradas.map((retirada, index) => (
-                  <li key={index} className="border-b py-2 flex justify-between text-sm">
-                    <span className="font-semibold">{retirada.projeto}</span>
-                    <span>{retirada.peca} ({retirada.quantidade}x)</span>
-                    <span className="text-gray-500">{new Date(retirada.data_pegou).toLocaleString()}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="w-full max-h-80 overflow-y-auto">
+                <ul className="w-full p-5">
+                  {historicoRetiradas.map((retirada, index) => (
+                    <li key={index} className="border-b py-2 grid grid-cols-3 gap-4 text-left">
+                      <span className="font-semibold min-w-[100px]">{retirada.projeto}</span>
+                      <span className='min-w-[100px]'>{retirada.peca} ({retirada.quantidade}x)</span>
+                      <span className="text-gray-500 min-w-[100px]">{new Date(retirada.data_pegou).toLocaleString()}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </CardContent>
         </Card>

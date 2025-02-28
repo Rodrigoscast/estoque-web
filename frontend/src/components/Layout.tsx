@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Menu, LogOut, User, LayoutDashboard, Cog, Users, FileArchive } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/contexts/UserContext";
+import { customFetch } from '@/utils/CustomFetch';
 
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -19,7 +20,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     async function fetchUser() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/me`, {
+        if (!token) {
+          console.error("Nenhum token encontrado!");
+        }
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/me`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -28,14 +32,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           },
         });
 
-        const data = await response.json();
+        const data = await response.json()
         if (!response.ok) throw new Error(data.error || "Erro desconhecido");
 
         setUserName(data.nome.split(" ")[0]);
         setUserCode(data.cod_user);
       } catch (error) {
         console.error("Erro ao buscar usuário:", error.message);
-        logout()
+        // logout()
       }
     }
     fetchUser();
@@ -54,10 +58,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/";
-  };
+  async function logout() {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+    });
+
+    localStorage.removeItem('token');
+    window.location.href = "/login";
+}
 
   const menuItems = [
     { name: "Projetos", icon: LayoutDashboard, path: "/projetos" },

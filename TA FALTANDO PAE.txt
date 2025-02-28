@@ -1,12 +1,23 @@
 CRIAR O APP PARA CADASTRO E RETIRADA DE PEÇAS!!!
 
+>Configurar prazo de projeto
 
->Projeto e Subprojeto
--Criar campo na tabela
--Criar rota que traz subprojetos de um projeto
--Atualizar front para mostrar os subprojetos
--Criar pagina apenas para subprojetos
--Atualizar rotas do projeto geral
+>Configurar Categorização de Peças (categoria e subcategoria)
+	-Item Comercial
+	-Usinagem
+		Torno
+		Fresa
+	-Laser
+
+>Configurar sistema monetário
+
+>Aplicativo
+-adicionar opção de retirar peças no estilo carrinho
+-melhorar aparência do aplicativo
+
+>Integração
+-encontrar um jeito de enviar os projetos para o meu backend
+-no executável adicionar opção de enviar projeto, escolhendo qual é o principal e quais são os subprojetos
 
 >Análise de estoque
 -média da quantidade de peças em um projeto, quanto mais novo o projeto maior o peso (limite 12 meses)
@@ -18,19 +29,7 @@ CRIAR O APP PARA CADASTRO E RETIRADA DE PEÇAS!!!
 >Alertas de estoque
 -enviar e-mails de aviso quando peças entrarem em crítico ou super crítico
 
->Lógica de adicionar peças
--verificar se existe a chance de aparecer uma peça nova e inesperada
-
->Aplicativo
--adicionar opção de retirar peças no estilo carrinho
--melhorar aparência do aplicativo
-
->Integração
--encontrar um jeito de enviar os projetos para o meu backend
--no executável adicionar opção de enviar projeto, escolhendo qual é o principal e quais são os subprojetos
-
-Clean do clean:
-projeto e sub na quinta a noite
-app em 1h
-analise de estoque e alerta em mais 1h
-integração eu me viro pra fazer em umas 4h
+>Criar relatórios
+-SPED
+-Previsão Financeira (um relatório com gastos mensais e previsão de gastos posteriores)
+-Previsão de Peças (um relatório parecido mas focado em gastos de peças)

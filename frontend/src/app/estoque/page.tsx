@@ -11,20 +11,28 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Cog } from 'lucide-react';
+import { customFetch } from '@/utils/CustomFetch';
+
+interface Peca {
+  cod_peca: number;
+  nome: string;
+  quantidade: number;
+  imagem?: string;
+}
 
 function PecasPage() {
   const router = useRouter();
-  const [pecas, setPecas] = useState([]);
+  const [pecas, setPecas] = useState<Peca[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [pecaSelecionada, setPecaSelecionada] = useState(null);
+  const [pecaSelecionada, setPecaSelecionada] = useState<Peca | null>(null);
   const [quantidadeAdicionada, setQuantidadeAdicionada] = useState(0);
 
   useEffect(() => {
     async function fetchPecas() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pecas`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pecas`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -32,10 +40,13 @@ function PecasPage() {
             ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
-        const data = await response.json();
+
+        if (!response.ok) throw new Error('Erro ao buscar estoque');
+
+        const data: Peca[] = await response.json()
         setPecas(data.sort((a, b) => a.nome.localeCompare(b.nome)));
       } catch (error) {
-        console.error('Erro ao buscar estoque:', error);
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -47,7 +58,7 @@ function PecasPage() {
     if (!pecaSelecionada || quantidadeAdicionada <= 0) return;
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pecas/${pecaSelecionada.cod_peca}`, {
+      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pecas/${pecaSelecionada.cod_peca}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -57,11 +68,16 @@ function PecasPage() {
         body: JSON.stringify({ quantidade: pecaSelecionada.quantidade + quantidadeAdicionada }),
       });
 
-      if (!response.ok) throw new Error('Erro ao atualizar quantidade de estoque');
-      
-      setPecas(prevPecas => prevPecas.map(p =>
-        p.cod_peca === pecaSelecionada.cod_peca ? { ...p, quantidade: p.quantidade + quantidadeAdicionada } : p
-      ));
+      if (!response.ok) throw new Error('Erro ao atualizar quantidade');
+
+      setPecas((prevPecas) =>
+        prevPecas.map((p) =>
+          p.cod_peca === pecaSelecionada.cod_peca
+            ? { ...p, quantidade: p.quantidade + quantidadeAdicionada }
+            : p
+        )
+      );
+
       setIsAddModalOpen(false);
       setPecaSelecionada(null);
       setQuantidadeAdicionada(0);
@@ -70,7 +86,7 @@ function PecasPage() {
     }
   };
 
-  const getCardColor = (quantidade) => {
+  const getCardColor = (quantidade: number) => {
     if (quantidade <= 5) return "bg-red-700/70 text-white";
     if (quantidade <= 10) return "bg-red-600/70 text-white";
     if (quantidade <= 15) return "bg-red-500/70 text-white";
@@ -91,7 +107,7 @@ function PecasPage() {
         {pecas.map((peca) => (
           <Card 
             key={peca.cod_peca} 
-            className={`${getCardColor(peca.quantidade)} cursor-pointer`} 
+            className={`${getCardColor(peca.quantidade)} cursor-pointer hover:shadow-lg transition`} 
             onClick={() => {
               setPecaSelecionada(peca);
               setIsAddModalOpen(true);

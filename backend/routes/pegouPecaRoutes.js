@@ -164,44 +164,53 @@ routerPegouPeca.get('/grafico/quantidades-por-usuario/:cod_user', async (req, re
     }
 });
 
+// Rota para gráfico de pizza considerando projetos relacionados
 routerPegouPeca.get('/grafico/pizza/por-usuario/:cod_projeto', async (req, res) => {
     try {
         const { cod_projeto } = req.params;
+        const projetosIDs = await getProjetosIDs(cod_projeto);
+        
         const sequelize = PegouPeca.sequelize;
         const [results, metadata] = await sequelize.query(`
             SELECT u.nome AS label, SUM(p.quantidade) AS total
             FROM pegou_peca p
             JOIN usuarios u ON p.cod_user = u.cod_user
-            WHERE p.cod_projeto = :cod_projeto
+            WHERE p.cod_projeto IN (:projetosIDs)
             GROUP BY u.nome
             ORDER BY total DESC;
         `, {
-            replacements: { cod_projeto },
-    });
-  
-    // Mapeia os resultados para arrays de labels e dados
-    const labels = results.map(row => row.label);
-    const data = results.map(row => parseInt(row.total, 10));
-  
-    res.json({ labels, data });
+            replacements: { projetosIDs },
+        });
+      
+        // Mapeia os resultados para arrays de labels e dados
+        const labels = results.map(row => row.label);
+        const data = results.map(row => parseInt(row.total, 10));
+      
+        res.json({ labels, data });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erro ao buscar dados para o gráfico de pizza.' });
     }
 });
 
-// Gráfico de pizza por projeto
+// Rota para gráfico de pizza por projeto, consolidando quantidades em projetos principais
 routerPegouPeca.get('/grafico/pizza/por-projeto/:cod_user', async (req, res) => {
     try {
         const { cod_user } = req.params;
         const sequelize = PegouPeca.sequelize;
 
         const [results] = await sequelize.query(`
-            SELECT pr.nome AS label, SUM(p.quantidade) AS total
+            SELECT 
+                CASE 
+                    WHEN pr.projeto_main = 0 THEN pr.nome 
+                    ELSE pm.nome 
+                END AS label, 
+                SUM(p.quantidade) AS total
             FROM pegou_peca p
             JOIN projeto pr ON p.cod_projeto = pr.cod_projeto
+            LEFT JOIN projeto pm ON pr.projeto_main = pm.cod_projeto
             WHERE p.cod_user = :cod_user
-            GROUP BY pr.nome
+            GROUP BY label
             ORDER BY total DESC;
         `, { replacements: { cod_user } });
 
@@ -214,6 +223,7 @@ routerPegouPeca.get('/grafico/pizza/por-projeto/:cod_user', async (req, res) => 
         res.status(500).json({ error: 'Erro ao buscar dados para o gráfico de pizza.' });
     }
 });
+
 
 // Peças retiradas
 routerPegouPeca.get('/materiais-retirados/:cod_projeto', async (req, res) => {
@@ -285,6 +295,7 @@ routerPegouPeca.get('/historico-retiradas/:cod_projeto', async (req, res) => {
     }
 });
 
+// Rota para histórico de retiradas por usuário, considerando nome do projeto principal
 routerPegouPeca.get('/historico-retiradas/por-usuario/:cod_user', async (req, res) => {
     try {
         const { cod_user } = req.params;
@@ -293,12 +304,16 @@ routerPegouPeca.get('/historico-retiradas/por-usuario/:cod_user', async (req, re
         const [results, metadata] = await sequelize.query(`
             SELECT 
                 p.cod_pegou_peca, 
-                pr.nome AS projeto,
+                CASE 
+                    WHEN pr.projeto_main != 0 THEN CONCAT(pr.nome, ' [', pm.nome, ']') 
+                    ELSE pr.nome 
+                END AS projeto,
                 pc.nome AS peca,
                 p.quantidade,
                 p.data_pegou
             FROM pegou_peca p
             JOIN projeto pr ON p.cod_projeto = pr.cod_projeto
+            LEFT JOIN projeto pm ON pr.projeto_main = pm.cod_projeto
             JOIN pecas pc ON p.cod_peca = pc.cod_peca
             WHERE p.cod_user = :cod_user
             ORDER BY p.data_pegou DESC;

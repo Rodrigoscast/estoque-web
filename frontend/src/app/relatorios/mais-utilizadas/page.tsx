@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { customFetch } from '@/utils/CustomFetch';
 
 function RelatorioPecasMaisUtilizadas() {
   const [pecas, setPecas] = useState([]);
@@ -19,7 +20,7 @@ function RelatorioPecasMaisUtilizadas() {
       try {
         const token = localStorage.getItem("token");
         const query = new URLSearchParams(filtros).toString();
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/relatorios/pecas-mais-utilizadas?${query}`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/relatorios/pecas-mais-utilizadas?${query}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -27,7 +28,7 @@ function RelatorioPecasMaisUtilizadas() {
             ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
-        const data = await response.json();
+        const data = await response.json()
         setPecas(data);
       } catch (error) {
         console.error('Erro ao buscar relatório:', error);

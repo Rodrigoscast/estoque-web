@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { customFetch } from '@/utils/CustomFetch';
 
 export default function CadastroPage() {
   const [nome, setNome] = useState('');
@@ -21,7 +22,7 @@ export default function CadastroPage() {
     setSuccess('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json',
           ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
@@ -29,7 +30,7 @@ export default function CadastroPage() {
         body: JSON.stringify({ nome, email, senha })
       });
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
         throw new Error(data.error || 'Erro ao cadastrar usuário'); // Usa a mensagem de erro do backend, se houver

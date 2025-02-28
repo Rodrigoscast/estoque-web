@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
+import { customFetch } from '@/utils/CustomFetch';
 
 // Definição do tipo do usuário
 interface UsuarioType {
@@ -36,7 +37,7 @@ function Usuarios() {
   async function fetchUsuarios() {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios`, {
+      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -45,7 +46,7 @@ function Usuarios() {
         },
       });
 
-      const data: UsuarioType[] = await response.json();
+      const data: UsuarioType[] = await response.json()
       if (!response.ok) throw new Error("Erro ao buscar usuários");
 
       setUsuarios(data);
@@ -62,14 +63,14 @@ function Usuarios() {
     setSuccess('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json',
           ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' }) },
         body: JSON.stringify({ nome, email, senha })
       });
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
         throw new Error(data.error || 'Erro ao cadastrar usuário');

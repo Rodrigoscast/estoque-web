@@ -3,6 +3,7 @@ const sequelize = require('./config/database');
 require('dotenv').config();
 const authMiddleware = require('./middlewares/authMiddleware');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 
 const authRoutes = require('./routes/authRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
@@ -18,10 +19,11 @@ const app = express();
 app.use(express.json());
 
 const cors = require('cors');
+app.use(cookieParser());
 
 // Adicione isso antes das rotas
 app.use(cors({
-    // origin: 'http://localhost:3001', // Altere para o endereço do seu frontend
+    origin: 'http://localhost:3001', // Altere para o endereço do seu frontend
     credentials: true, // Permite envio de cookies e headers de autenticação
 }));
 

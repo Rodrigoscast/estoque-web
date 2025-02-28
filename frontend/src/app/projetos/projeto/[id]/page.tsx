@@ -15,6 +15,7 @@ import { useUser } from "@/contexts/UserContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { customFetch } from '@/utils/CustomFetch';
 
 
 interface ProjetoType {
@@ -88,7 +89,7 @@ function ProjetoPage() {
     async function fetchProjeto() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${params.id}`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${params.id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -101,7 +102,7 @@ function ProjetoPage() {
           // router.push("/projetos");
           return;
         }
-        const data = await response.json();
+        const data = await response.json()
         setProjeto(data);
       } catch (error) {
         console.error("Erro ao buscar projeto:", error);
@@ -118,7 +119,7 @@ function ProjetoPage() {
       try {
         const token = localStorage.getItem("token");
         // Inclua o id do projeto na URL:
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/grafico/quantidades-por-data/${params.id}`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/grafico/quantidades-por-data/${params.id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -130,7 +131,7 @@ function ProjetoPage() {
           console.error("Erro ao buscar dados do gráfico");
           return;
         }
-        const data = await response.json();
+        const data = await response.json()
         setGrafico(data);
       } catch (error) {
         console.error("Erro ao buscar dados do gráfico:", error);
@@ -145,7 +146,7 @@ function ProjetoPage() {
     async function fetchGraficoPizza() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/grafico/pizza/por-usuario/${params.id}`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/grafico/pizza/por-usuario/${params.id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -157,7 +158,7 @@ function ProjetoPage() {
           console.error("Erro ao buscar dados do gráfico de pizza");
           return;
         }
-        const data = await response.json();
+        const data = await response.json()
         setGraficoPizza(data);
       } catch (error) {
         console.error("Erro ao buscar dados do gráfico de pizza:", error);
@@ -173,7 +174,7 @@ function ProjetoPage() {
     async function fetchMateriaisRetirados() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/materiais-retirados/${params.id}`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/materiais-retirados/${params.id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -185,7 +186,7 @@ function ProjetoPage() {
           console.error("Erro ao buscar materiais retirados");
           return;
         }
-        const data = await response.json();
+        const data = await response.json()
         setMateriaisRetirados(data);
       } catch (error) {
         console.error("Erro ao buscar materiais retirados:", error);
@@ -201,7 +202,7 @@ function ProjetoPage() {
     async function fetchMateriaisFaltantes() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/materiais-faltantes/${params.id}`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/materiais-faltantes/${params.id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -213,7 +214,7 @@ function ProjetoPage() {
           console.error("Erro ao buscar materiais faltantes");
           return;
         }
-        const data = await response.json();
+        const data = await response.json()
         setMateriaisFaltantes(data);
       } catch (error) {
         console.error("Erro ao buscar materiais faltantes:", error);
@@ -228,7 +229,7 @@ function ProjetoPage() {
     async function fetchHistoricoRetiradas() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/historico-retiradas/${params.id}`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca/historico-retiradas/${params.id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -240,7 +241,7 @@ function ProjetoPage() {
           console.error("Erro ao buscar histórico de retiradas");
           return;
         }
-        const data = await response.json();
+        const data = await response.json()
         setHistoricoRetiradas(data);
       } catch (error) {
         console.error("Erro ao buscar histórico de retiradas:", error);
@@ -260,7 +261,7 @@ async function handleRetirarPeca() {
         const dataFormatada = new Date(dataPegou.getTime() - dataPegou.getTimezoneOffset() * 60000)
             .toISOString();
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca`, {
+        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca`, {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`,
             ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })},
@@ -300,7 +301,7 @@ async function handleRetirarPeca() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/id/concluir`, {
+      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/id/concluir`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -321,7 +322,7 @@ async function handleRetirarPeca() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/id/desativar`, {
+      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/id/desativar`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

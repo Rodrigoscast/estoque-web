@@ -30,16 +30,11 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// Rota de login
+//Login
 router.post('/login', async (req, res) => {
     const { email, senha } = req.body;
 
-    const usuario = await Usuario.findOne({ 
-        where: { 
-            email, 
-            ativado: true 
-        } 
-    });
+    const usuario = await Usuario.findOne({ where: { email, ativado: true } });
     if (!usuario) {
         return res.status(401).json({ error: 'Credenciais inválidas' });
     }
@@ -49,9 +44,50 @@ router.post('/login', async (req, res) => {
         return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
-    const token = jwt.sign({ id: usuario.cod_user, email: usuario.email }, JWT_SECRET, { expiresIn: '1h' });
+    // Criar tokens
+    const accessToken = jwt.sign({ id: usuario.cod_user, email: usuario.email }, JWT_SECRET, { expiresIn: '1h' });
+    const refreshToken = jwt.sign({ id: usuario.cod_user }, JWT_SECRET, { expiresIn: '7d' });
 
-    res.json({ token });
+    // Enviar refresh token no cookie
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true, // Impede que o JS do frontend acesse o cookie
+        secure: process.env.NODE_ENV === 'production', // True em produção (HTTPS)
+        sameSite: 'Strict', // Evita envio em sites terceiros
+        maxAge: 7 * 24 * 60 * 60 * 1000, // Expira em 7 dias
+    });
+
+    // Enviar access token na resposta
+    res.json({ token: accessToken });
+});
+
+router.post('/refresh-token', async (req, res) => {
+    try {
+        const refreshToken = req.cookies.refreshToken; // Pega do cookie
+
+        if (!refreshToken) {
+            return res.status(401).json({ message: "Refresh token não encontrado" });
+        }
+
+        jwt.verify(refreshToken, JWT_SECRET, (err, decoded) => {
+            if (err) {
+                return res.status(403).json({ message: "Refresh token inválido" });
+            }
+
+            // Criar novo token de acesso
+            const novoToken = jwt.sign({ id: decoded.id, email: decoded.email }, JWT_SECRET, { expiresIn: '1h' });
+
+            console.log(`Novo token gerado para o usuário ${decoded.email}: ${novoToken}`);
+
+            res.json({ token: novoToken });
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Erro ao renovar token" });
+    }
+});
+
+router.post('/logout', (req, res) => {
+    res.clearCookie('refreshToken');
+    res.json({ message: "Logout realizado com sucesso" });
 });
 
 module.exports = router;

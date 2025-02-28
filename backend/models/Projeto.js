@@ -24,8 +24,8 @@ const Projeto = sequelize.define('Projeto', {
         defaultValue: 0
     }
 }, {
-    tableName: 'projeto',  // Evita que o Sequelize tente pluralizar o nome da tabela
-    timestamps: false       // Desativa createdAt e updatedAt
+    tableName: 'projeto',
+    timestamps: false
 });
 
 module.exports = Projeto;

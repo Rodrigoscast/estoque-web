@@ -6,6 +6,7 @@ import { Cpu } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { customFetch } from '@/utils/CustomFetch';
 
 interface ProjetoProps {
   id: number;
@@ -27,14 +28,13 @@ export default function Projeto({ id, nome, imagem, min, max }: ProjetoProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [pecas, setPecas] = useState<Peca[]>([]);
   const [showMenu, setShowMenu] = useState(false);
-  const [animateMenu, setAnimateMenu] = useState(false);
 
   useEffect(() => {
     if (modalOpen) {
       const fetchPecas = async () => {
         try {
           const token = localStorage.getItem("token");
-          const response = await fetch(
+          const response = await customFetch(
             `${process.env.NEXT_PUBLIC_API_URL}/projetos/${id}/pecas`,
             {
               method: "GET",
@@ -45,7 +45,7 @@ export default function Projeto({ id, nome, imagem, min, max }: ProjetoProps) {
               },
             }
           );
-          const data = await response.json();
+          const data = await response.json()
           setPecas(data);
         } catch (err) {
           console.error("Erro ao buscar peças:", err);
@@ -61,12 +61,9 @@ export default function Projeto({ id, nome, imagem, min, max }: ProjetoProps) {
     let timer: NodeJS.Timeout;
     if (menuOpen) {
       setShowMenu(true);
-      timer = setTimeout(() => setAnimateMenu(true), 50); // Pequeno atraso para iniciar animação
     } else {
-      setAnimateMenu(false);
-      setTimeout(() => setShowMenu(false), 300); // Tempo da animação antes de esconder
+      setShowMenu(false);
     }
-    return () => clearTimeout(timer);
   }, [menuOpen]);
 
   return (
@@ -105,17 +102,16 @@ export default function Projeto({ id, nome, imagem, min, max }: ProjetoProps) {
 
       {showMenu && (
         <div 
-          className={`absolute rounded-lg inset-0 bg-black/50 flex items-center justify-between p-4 transition-all duration-300 ease-in-out
-            ${animateMenu ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+          className={`absolute rounded-lg bg-inherit inset-0 flex`}
         >
           <Button 
-            className="bg-blue-500 hover:bg-blue-600 text-white w-1/2 m-1"
+            className="text-white w-full h-full rounded-none"
             onClick={() => router.push(`/projetos/projeto/${id}`)}
           >
             Projeto
           </Button>
           <Button 
-            className="bg-green-500 hover:bg-green-600 text-white w-1/2 m-1"
+            className="text-white w-full h-full rounded-none"
             onClick={() => setModalOpen(true)}
           >
             Peças

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import withAuth from "@/components/hoc/withAuth";
 import Projeto from "@/components/project";
+import { customFetch } from '@/utils/CustomFetch';
 
 // Definição do tipo do projeto
 interface ProjetoType {
@@ -25,7 +26,7 @@ function Dashboard() {
     async function fetchProjetos() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(
+        const response = await customFetch(
           `${process.env.NEXT_PUBLIC_API_URL}/projetos?concluidos=${mostrarConcluidos}`,
           {
             method: "GET",
@@ -37,7 +38,7 @@ function Dashboard() {
           }
         );
 
-        const data: ProjetoType[] = await response.json();
+        const data: ProjetoType[] = await response.json()
         if (!response.ok) throw new Error("Erro ao buscar projetos");
 
         setProjetos(data);
