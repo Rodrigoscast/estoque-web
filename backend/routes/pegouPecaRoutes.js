@@ -1,10 +1,9 @@
 const express = require('express');
-const { Sequelize } = require('sequelize'); // Certifique-se de ter acesso ao Sequelize configurado
-const PegouPeca = require('../models/PegouPeca');
+const { Op, Sequelize } = require('sequelize');
 const routerPegouPeca = express.Router();
 const moment = require("moment-timezone");
-const Projeto = require('../models/Projeto');
-const Usuario = require('../models/Usuario');
+const { Categorias, Peca, HistoricoCompras, PegouPeca, Usuario, Projeto } = require('../models/Associations');
+const sequelize = require('../config/database');
 
 // Função auxiliar para obter IDs dos projetos relacionados
 const obterProjetosRelacionados = async (cod_projeto) => {
@@ -39,23 +38,82 @@ routerPegouPeca.get('/', async (req, res) => {
     }
 });
 
+routerPegouPeca.get('/retiradas', async (req, res) => {
+    try {
+        let { tempo } = req.query;
+
+        // Converte tempo para número e garante que esteja entre 1 e 12 meses
+        tempo = parseInt(tempo);
+        if (isNaN(tempo) || tempo < 1 || tempo > 12) {
+            return res.status(400).json({ error: 'O tempo deve ser um número entre 1 e 12 meses.' });
+        }
+
+        const dataInicio = new Date();
+        dataInicio.setMonth(dataInicio.getMonth() - tempo); // Retrocede o número de meses solicitado
+
+        const pegouPecas = await PegouPeca.findAll({
+            attributes: [
+                'cod_peca',
+                [sequelize.fn('SUM', sequelize.col('quantidade')), 'total_retirado']
+            ],
+            where: {
+                data_pegou: {
+                    [Op.gte]: dataInicio
+                }
+            },
+            group: ['cod_peca'],
+            raw: true // Retorna apenas objetos JavaScript puros
+        });
+
+        // Formata os dados no formato desejado
+        const resultadoFormatado = pegouPecas.map(item => ({
+            cod_peca: item.cod_peca,
+            quantidade: Number(item.total_retirado) // Garante que o valor seja numérico
+        }));
+
+        res.json(resultadoFormatado);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao buscar registros.' });
+    }
+});
+
 //Depois de pegar uma peça, atualizar a quantidade de peças atuais no projeto e no main dele
 routerPegouPeca.post("/", async (req, res) => {
+
     const transaction = await PegouPeca.sequelize.transaction(); // Inicia uma transação
 
     try {
-        let { data_pegou, cod_projeto, quantidade, ...dados } = req.body;
+        let { data_pegou, cod_projeto, cod_peca, quantidade, ...dados } = req.body;
 
-        // Converte corretamente a data ISO 8601 para o fuso de Brasília
+        // Converte a data corretamente para o fuso de Brasília
         data_pegou = moment.tz(data_pegou, "America/Sao_Paulo").toDate();
+
+        // Buscar a peça para verificar o estoque
+        const peca = await Peca.findByPk(cod_peca, { transaction });
+
+        if (!peca) {
+            throw new Error("Peça não encontrada.");
+        }
+
+        if (peca.quantidade < quantidade) {
+            await transaction.rollback(); // Desfaz a transação
+            return res.status(400).json({ error: "Estoque insuficiente." });
+        }
 
         // Criar o registro de retirada da peça
         const pegouPeca = await PegouPeca.create(
-            { ...dados, cod_projeto, quantidade, data_pegou },
+            { ...dados, cod_projeto, cod_peca, quantidade, data_pegou },
             { transaction }
         );
 
-        // Buscar o projeto atual para obter pecas_atuais
+        // Atualizar a quantidade de peças no estoque
+        await peca.update(
+            { quantidade: peca.quantidade - quantidade },
+            { transaction }
+        );
+
+        // Buscar o projeto atual para atualizar pecas_atuais
         const projeto = await Projeto.findByPk(cod_projeto, { transaction });
 
         if (!projeto) {
@@ -247,20 +305,23 @@ routerPegouPeca.get('/materiais-retirados/:cod_projeto', async (req, res) => {
     }
 });
 
-// Peças que faltam retirar
+// Peças que faltam retirar com informação do estoque
 routerPegouPeca.get('/materiais-faltantes/:cod_projeto', async (req, res) => {
     try {
         const projetosIDs = await getProjetosIDs(req.params.cod_projeto);
         const sequelize = PegouPeca.sequelize;
 
         const [results] = await sequelize.query(`
-            SELECT pp.cod_peca, pc.nome,
-                GREATEST(pp.quantidade - COALESCE(SUM(p.quantidade), 0), 0) AS quantidade
+            SELECT 
+                pp.cod_peca, 
+                pc.nome,
+                GREATEST(pp.quantidade - COALESCE(SUM(p.quantidade), 0), 0) AS quantidade,
+                pc.quantidade AS estoque -- Adiciona o estoque disponível da peça
             FROM peca_projeto pp
             JOIN pecas pc ON pp.cod_peca = pc.cod_peca
             LEFT JOIN pegou_peca p ON p.cod_projeto = pp.cod_projeto AND p.cod_peca = pp.cod_peca
             WHERE pp.cod_projeto IN (:projetosIDs)
-            GROUP BY pp.cod_peca, pc.nome, pp.quantidade
+            GROUP BY pp.cod_peca, pc.nome, pp.quantidade, pc.quantidade -- Inclui estoque no GROUP BY
             HAVING GREATEST(pp.quantidade - COALESCE(SUM(p.quantidade), 0), 0) > 0
             ORDER BY pc.nome;
         `, { replacements: { projetosIDs } });

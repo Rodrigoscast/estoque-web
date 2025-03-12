@@ -1,7 +1,8 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const Projeto = require('../models/Projeto');
+const { Categorias, Peca, HistoricoCompras, PegouPeca, Usuario, Projeto } = require('../models/Associations');
 const routerProjeto = express.Router();
+const { Sequelize } = require('sequelize');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -31,12 +32,35 @@ routerProjeto.get("/", async (req, res) => {
     try {
         const { concluidos } = req.query;
         const filtroConcluido = concluidos === "true"; // true -> concluídos, false -> ativos
-    
+
         const projetos = await Projeto.findAll({
             where: { concluido: filtroConcluido, ativo: true, projeto_main: 0 },
             order: [["nome", "ASC"]],
+            attributes: [
+                "cod_projeto",
+                "nome",
+                "concluido",
+                "ativo",
+                "imagem",
+                "pecas_atuais",
+                "pecas_totais",
+                "data_entrada",
+                "data_entrega",
+                [
+                    Sequelize.fn("DATE", Sequelize.fn("MIN", Sequelize.col("PegouPeca.data_pegou"))),
+                    "primeira_retirada"
+                ]
+            ],
+            include: [
+                {
+                    model: PegouPeca,
+                    attributes: [],
+                    required: false, // Para incluir mesmo projetos sem retiradas
+                },
+            ],
+            group: ["Projeto.cod_projeto"],
         });
-  
+
         res.json(projetos);
     } catch (error) {
         console.error("Erro ao buscar projetos:", error);

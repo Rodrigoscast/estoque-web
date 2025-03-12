@@ -6,6 +6,7 @@ import { Menu, LogOut, User, LayoutDashboard, Cog, Users, FileArchive } from "lu
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/contexts/UserContext";
 import { customFetch } from '@/utils/CustomFetch';
+import { useRouter } from 'next/navigation';
 
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -14,7 +15,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState("Carregando...");
   const { userCode, setUserCode } = useUser();
   const pathname = usePathname();
-  const userMenuRef = useRef(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchUser() {
@@ -37,7 +40,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         setUserName(data.nome.split(" ")[0]);
         setUserCode(data.cod_user);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Erro ao buscar usuário:", error.message);
         // logout()
       }
@@ -46,12 +49,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setUserMenuOpen(false);
       }
     }
-
+  
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -61,12 +64,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   async function logout() {
     await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
         method: 'POST',
-        credentials: 'include',
+        credentials: 'include' // Envia cookies para que o servidor possa apagá-los
     });
 
-    localStorage.removeItem('token');
-    window.location.href = "/login";
-}
+    // Removendo tokens do localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken"); // Se houver refresh token salvo
+
+    router.push('/');
+  };
 
   const menuItems = [
     { name: "Projetos", icon: LayoutDashboard, path: "/projetos" },
@@ -99,7 +105,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded p-2"
+                className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded p-2 z-10"
               >
                 <p className="px-4 py-2 text-gray-700 text-sm border-b">{userName}</p>
                 <button

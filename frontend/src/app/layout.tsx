@@ -3,6 +3,8 @@ import { Open_Sans } from "next/font/google";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const openSans = Open_Sans({
   variable: "--font-open-sans",  // Defina a variável CSS para Open Sans
@@ -37,6 +39,7 @@ export default function RootLayout({
       <body
         className={`${openSans.variable} antialiased`}
       >
+        <ToastContainer />
         <UserProvider>
           {children}
         </UserProvider>

@@ -12,10 +12,12 @@ import PieChart from '@/components/graficos/PieChart';
 import MateriaisList from '@/components/MateriaisList';
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { customFetch } from '@/utils/CustomFetch';
+import { Label } from '@/components/ui/label';
+import { toast } from "react-toastify";
 
 
 interface ProjetoType {
@@ -25,6 +27,8 @@ interface ProjetoType {
   pecas_totais: number;
   pecas_atuais: number;
   data_entrada: string;
+  data_entrega: string;
+  projeto_main: number;
 }
 
 interface GraficoType {
@@ -41,6 +45,7 @@ interface Material {
   cod_peca: number;
   nome: string;
   quantidade: number;
+  estoque: number;
 }
 
 interface Peca {
@@ -73,6 +78,9 @@ function ProjetoPage() {
 
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [actionType, setActionType] = useState("concluir");
+
 
   const [historicoRetiradas, setHistoricoRetiradas] = useState<{ 
     cod_pegou_peca: number;
@@ -84,6 +92,10 @@ function ProjetoPage() {
   const [loadingHistorico, setLoadingHistorico] = useState(true);
 
   const { userCode } = useUser();
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [editData, setEditData] = useState(Date);
 
   useEffect(() => {
     async function fetchProjeto() {
@@ -250,42 +262,66 @@ function ProjetoPage() {
       }
     }
     fetchHistoricoRetiradas();
-}, [params.id, refreshKey]);
+  }, [params.id, refreshKey]);
 
-async function handleRetirarPeca() {
-    if (selectedPeca && quantidade > 0) {      
-      try {
-        const token = localStorage.getItem("token");
+  async function handleRetirarPeca() {
 
-        const dataPegou = new Date();
-        const dataFormatada = new Date(dataPegou.getTime() - dataPegou.getTimezoneOffset() * 60000)
-            .toISOString();
+    if (selectedPeca && quantidade > 0) {     
+      if(selectedPeca.estoque >= quantidade){ 
+        try {
+            const token = localStorage.getItem("token");
 
-        const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`,
-            ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })},
-            body: JSON.stringify({
-                cod_projeto: params.id,
-                cod_peca: selectedPeca.cod_peca,
-                cod_user: Number(userCode),
-                quantidade: Number(quantidade),
-                data_pegou: dataFormatada,
-            }),
-        });
+            const dataPegou = new Date();
+            const dataFormatada = new Date(dataPegou.getTime() - dataPegou.getTimezoneOffset() * 60000)
+                .toISOString();
 
-        if (!response.ok) throw new Error("Erro ao retirar peça");
+            const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/pegou_peca`, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json", 
+                    "Authorization": `Bearer ${token}`,
+                    ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
+                },
+                body: JSON.stringify({
+                    cod_projeto: params.id,
+                    cod_peca: selectedPeca.cod_peca,
+                    cod_user: Number(userCode),
+                    quantidade: Number(quantidade),
+                    data_pegou: dataFormatada,
+                }),
+            });
 
-        setModalOpen(false);
+            let responseData = null;
 
-        // Atualiza o histórico de retiradas sem dar reload na página
-        setRefreshKey(prevKey => prevKey + 1); 
+            // Só tenta converter para JSON se houver conteúdo na resposta
+            const textResponse = await response.text();
+            if (textResponse) {
+                responseData = JSON.parse(textResponse);
+            }
 
-      } catch (error) {
-        console.error(error);
+            if (!response.ok) {
+                if (response.status === 400 && responseData?.error === "Estoque insuficiente.") {
+                    toast.error("Estoque insuficiente para essa retirada!");
+                } else {
+                    throw new Error(responseData?.error || "Erro ao retirar peça");
+                }
+                return; // Evita continuar a execução
+            }
+
+            setModalOpen(false);
+            setRefreshKey(prevKey => prevKey + 1); // Atualiza histórico sem recarregar a página
+            toast.success("Peças retiradas com sucesso!");
+
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || "Erro ao retirar peça");
+        }
+      } else {
+        toast.error(`Estoque insuficiente. Quantidade atual no estoque: ${selectedPeca.estoque}`);
       }
     }
   }
+
 
   // Se o projeto não for encontrado, redireciona
   useEffect(() => {
@@ -296,12 +332,26 @@ async function handleRetirarPeca() {
     }
   }, [loadingProjeto, projeto]);
 
-  const handleConcluirProjeto = async (event: React.MouseEvent) => {
-    event.stopPropagation();
+  
+  const openConfirmModal = (type: "concluir" | "excluir") => {
+    setActionType(type);
+    setIsConfirmModalOpen(true);
+  };
 
+  const handleConfirmAction = async () => {
+    setIsConfirmModalOpen(false);
+
+    if (actionType === "concluir") {
+      await handleConcluirProjeto();
+    } else {
+      await handleExcluirProjeto();
+    }
+  };
+
+  const handleConcluirProjeto = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/id/concluir`, {
+      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${params.id}/concluir`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -310,19 +360,22 @@ async function handleRetirarPeca() {
         },
       });
 
-      if (!response.ok) throw new Error("Erro ao concluir projeto");
+      if (!response.ok) {
+        toast.error("Erro ao concluir projeto");
+        throw new Error("Erro ao concluir projeto");
+      }
 
+      toast.success("Projeto concluído com sucesso!");
+      router.push("/projetos");
     } catch (error) {
       console.error(error);
     }
   };
 
-  const handleExcluirProjeto = async (event: React.MouseEvent) => {
-    event.stopPropagation();
-
+  const handleExcluirProjeto = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/id/desativar`, {
+      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${params.id}/desativar`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -331,8 +384,38 @@ async function handleRetirarPeca() {
         },
       });
 
-      if (!response.ok) throw new Error("Erro ao excluir projeto");
+      if (!response.ok) {
+        toast.error("Erro ao excluir projeto");
+        throw new Error("Erro ao excluir projeto");
+      }
 
+      toast.success("Projeto excluído com sucesso!");
+      router.push("/projetos");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleEdit = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${params.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          "Authorization": `Bearer ${token}`,
+          ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
+        },
+        body: JSON.stringify(projeto),
+      });
+
+      if (!response.ok){
+        toast.error("Erro ao editar data")
+        throw new Error('Erro ao editar data');
+      }
+
+      setIsEditModalOpen(false);
+      toast.success("Data alterada com sucesso!")
     } catch (error) {
       console.error(error);
     }
@@ -345,14 +428,27 @@ async function handleRetirarPeca() {
 
   return (
     <Layout>
-    
-      {projeto && projeto.pecas_atuais < projeto.pecas_totais && (
-        <div className="flex w-full justify-end items-center pl-8 pb-8">
-          <Button onClick={() => setModalOpen(true)} className="mt-4">
-            Retirar Peças
-          </Button>
+
+      <div className="flex justify-between">
+        <div className="flex gap-2 w-full justify-start items-center pl-8 pb-8">
+          <Button variant="destructive" onClick={() => openConfirmModal("excluir")}>Excluir Projeto</Button>
         </div>
-      )}
+        {projeto && (
+          <>
+            {projeto.pecas_atuais < projeto.pecas_totais && (
+              <div className="flex gap-2 w-full justify-end items-center pl-8 pb-8">
+                <Button onClick={() => setIsEditModalOpen(true)}>Data de Entrega</Button>
+                <Button onClick={() => setModalOpen(true)}>Retirar Peças</Button>
+              </div>
+            )}
+            {projeto.projeto_main === 0 && projeto.pecas_atuais >= projeto.pecas_totais &&(
+              <div className="flex gap-2 w-full justify-end items-center pl-8 pb-8">
+                <Button onClick={() => openConfirmModal("concluir")}>Concluir Projeto</Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
@@ -404,8 +500,8 @@ async function handleRetirarPeca() {
             <Image
               src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${projeto.imagem}`}
               alt={projeto.nome}
-              width={250}
-              height={250}
+              width={1920}
+              height={1080}
               className="rounded-md object-cover w-4/5 h-auto"
               priority
             />
@@ -478,6 +574,43 @@ async function handleRetirarPeca() {
           )}
         </div>
       </div>
+
+      {/* Modal de Edição */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Data de Entrega</DialogTitle>
+            <DialogDescription>Altere a data de entrega e salve as mudanças.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Data de Entrega</Label>
+              <Input
+                type="date"
+                value={projeto.data_entrega}
+                onChange={(e) => 
+                  setProjeto(prev => prev ? { ...prev, data_entrega: e.target.value } : prev)
+                }
+              />
+            </div>
+            <Button onClick={handleEdit}>Salvar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Confirmação */}
+      <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmação</DialogTitle>
+          </DialogHeader>
+          <p>Tem certeza que deseja {actionType === "concluir" ? "concluir" : "excluir"} este projeto? Esta ação não pode ser desfeita.</p>
+          <DialogFooter>
+            <Button onClick={() => setIsConfirmModalOpen(false)} variant="outline">Cancelar</Button>
+            <Button onClick={handleConfirmAction} variant="destructive">Confirmar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

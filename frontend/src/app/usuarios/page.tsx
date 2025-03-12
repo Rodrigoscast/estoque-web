@@ -10,7 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
+import { toast } from "react-toastify";
 import { customFetch } from '@/utils/CustomFetch';
+import styled from 'styled-components';
 
 // Definição do tipo do usuário
 interface UsuarioType {
@@ -29,6 +31,7 @@ function Usuarios() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
+  const [filtro, setFiltro] = useState("");
 
   useEffect(() => {
     fetchUsuarios();
@@ -73,10 +76,13 @@ function Usuarios() {
       const data = await response.json()
 
       if (!response.ok) {
+        toast.error(`${data.error}!`);
         throw new Error(data.error || 'Erro ao cadastrar usuário');
       }
 
       setSuccess('Usuário cadastrado com sucesso!');
+
+      toast.success("Usuário cadastrado com sucesso!");
 
       // Atualiza a lista de usuários adicionando o novo usuário
       const novoUsuario = { cod_user: data.cod_user, nome, email }; // Assume que o backend retorna o ID
@@ -95,6 +101,10 @@ function Usuarios() {
     }
   };
 
+  const usuariosFiltrados = usuarios.filter((usuarios) =>
+    usuarios.nome.toLowerCase().includes(filtro.toLowerCase())
+  );
+
   return (
     <Layout>
       <div className="flex justify-between items-center">
@@ -102,9 +112,26 @@ function Usuarios() {
 
         {/* Botão que abre a modal */}
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-500 text-white">Cadastrar Usuário</Button>
-          </DialogTrigger>
+          <div className="flex flex-line gap-6 items-center">
+            <DialogTrigger asChild>
+              <Button className="bg-blue-500 text-white">Cadastrar Usuário</Button>
+            </DialogTrigger>
+            <StyledWrapper>
+              <div className="input-container">
+                <input
+                  type="text"
+                  name="text"
+                  value={filtro}
+                  onChange={(e) => setFiltro(e.target.value)}
+                  placeholder="Pesquise um Usuário"
+                  className="input"
+                />
+                <label className="label" htmlFor="input">Pesquisar</label>
+                <div className="topline" />
+                <div className="underline" />
+              </div>
+            </StyledWrapper>
+          </div>
 
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -117,18 +144,16 @@ function Usuarios() {
             <form onSubmit={handleCadastro} className="space-y-4">
               <div>
                 <Label>Nome</Label>
-                <Input type="text" value={nome} onChange={(e) => setNome(e.target.value)} required />
+                <StyledWrapper><Input type="text" value={nome} onChange={(e) => setNome(e.target.value)} required className="input2" /></StyledWrapper>
               </div>
               <div>
                 <Label>Email</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <StyledWrapper><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="input2" /></StyledWrapper>
               </div>
               <div>
                 <Label>Senha</Label>
-                <Input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} required />
+                <StyledWrapper><Input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} required className="input2" /></StyledWrapper>
               </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-              {success && <p className="text-green-500 text-sm">{success}</p>}
               <Button type="submit" className="w-full">Cadastrar</Button>
             </form>
           </DialogContent>
@@ -139,9 +164,9 @@ function Usuarios() {
 
       {loading ? (
         <p>Carregando usuários...</p>
-      ) : usuarios.length > 0 ? (
+      ) : usuariosFiltrados.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          {usuarios.map((usuario) => (
+          {usuariosFiltrados.map((usuario) => (
             <UsuarioCard key={usuario.cod_user} cod_user={usuario.cod_user} nome={usuario.nome} email={usuario.email} />
           ))}
         </div>
@@ -151,5 +176,106 @@ function Usuarios() {
     </Layout>
   );
 }
+
+const StyledWrapper = styled.div`
+    
+  .input-container {
+    position: relative;
+  }
+
+  .input {
+    padding: 10px;
+    height: 40px;
+    border: 2px solid #0B2447;
+    border-top: none;
+    border-bottom: none;
+    font-size: 16px;
+    background: transparent;
+    outline: none;
+    box-shadow: 7px 7px 0px 0px #0B2447;
+    transition: all 0.5s;
+  }
+
+  .input:focus {
+    box-shadow: none;
+    transition: all 0.5s;
+  }
+
+  .label {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: #0B2447;
+    transition: all 0.5s;
+    transform: scale(0);
+    z-index: 0;
+  }
+
+  .input-container .topline {
+    position: absolute;
+    content: "";
+    background-color: #0B2447;
+    width: 0%;
+    height: 2px;
+    right: 0;
+    top: 0;
+    transition: all 0.5s;
+  }
+
+  .input-container input[type="text"]:focus ~ .topline {
+    width: 55%;
+    transition: all 0.5s;
+  }
+
+  .input-container .underline {
+    position: absolute;
+    content: "";
+    background-color: #0B2447;
+    width: 0%;
+    height: 2px;
+    right: 0;
+    bottom: 0;
+    transition: all 0.5s;
+  }
+
+  .input-container input[type="text"]:focus ~ .underline {
+    width: 100%;
+    transition: all 0.5s;
+  }
+
+  .input-container input[type="text"]:focus ~ .label {
+    top: -10px;
+    transform: scale(1);
+    transition: all 0.5s;
+  }
+    
+  .input::placeholder {
+    color: gray;
+    transition: color 0.3s ease;
+  }
+
+  .input:focus::placeholder {
+    color: transparent;
+  }
+    .checkbox-wrapper-8 .tgl {
+    display: none;
+  }
+    
+  .input2 {
+    font-family: "SF Pro";
+    width: 100%;
+    padding: 0.875rem;
+    font-size: 1rem;
+    border: 1.5px solid #000;
+    border-radius: 0.5rem;
+    box-shadow: 2.5px 3px 0 #000;
+    outline: none;
+    transition: ease 0.25s;
+  }
+
+  .input2:focus {
+    box-shadow: 5.5px 7px 0 black;
+  }`;
+  
 
 export default withAuth(Usuarios);

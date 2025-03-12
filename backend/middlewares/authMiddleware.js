@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
 
 module.exports = (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = req.headers.authorization?.split(' ')[1]; // Usa optional chaining
 
     if (!token) {
         return res.status(401).json({ error: 'Acesso negado. Token não fornecido.' });
@@ -14,6 +14,7 @@ module.exports = (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        res.status(401).json({ error: 'Token inválido ou expirado' });
+        console.error("Erro ao validar token:", error.message);
+        return res.status(401).json({ error: 'Token inválido ou expirado' });
     }
 };

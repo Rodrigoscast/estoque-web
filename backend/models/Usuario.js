@@ -26,6 +26,16 @@ const Usuario = sequelize.define('Usuario', {
         allowNull: false,
         defaultValue: true
     },
+    site: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    },
+    app: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    },
 }, {
     tableName: 'usuarios',
     timestamps: false,

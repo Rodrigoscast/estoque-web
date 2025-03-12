@@ -4,6 +4,7 @@ require('dotenv').config();
 const authMiddleware = require('./middlewares/authMiddleware');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const startCronJobs = require('./scripts/cron'); 
 
 const authRoutes = require('./routes/authRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
@@ -14,6 +15,7 @@ const pegouPecaRoutes = require('./routes/pegouPecaRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const relatorioRoutes = require('./routes/relatorioRoutes');
 const endpointRoutes = require('./routes/endpointRoutes');
+const categoriasRoutes = require('./routes/categoriasRoutes');
 
 const app = express();
 app.use(express.json());
@@ -41,10 +43,12 @@ app.use('/peca_projeto', pecaProjetoRoutes);
 app.use('/pegou_peca', pegouPecaRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/relatorios', relatorioRoutes);
+app.use('/categorias', categoriasRoutes);
 
 sequelize.sync().then(() => {
     console.log('Banco de dados sincronizado 🚀');
     app.listen(3000, '0.0.0.0', () => {
         console.log("Servidor rodando na porta 3000");
+        startCronJobs();
     });
 }).catch(err => console.error('Erro ao sincronizar banco de dados:', err));

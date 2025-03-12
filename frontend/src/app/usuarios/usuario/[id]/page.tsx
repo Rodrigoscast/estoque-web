@@ -12,7 +12,8 @@ import { Label } from '@/components/ui/label';
 import BarChart from '@/components/graficos/BarChart';
 import PieChart from '@/components/graficos/PieChart';
 import { customFetch } from '@/utils/CustomFetch';
-
+import { toast } from "react-toastify";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface GraficoType {
   labels: string[];
@@ -36,7 +37,7 @@ function UsuarioPage() {
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [editData, setEditData] = useState({ nome: '', email: '' });
+  const [editData, setEditData] = useState({ nome: '', email: '', site: false, app: true });
 
   const [grafico, setGrafico] = useState<GraficoType>({ labels: [], data: [] });
   const [loadingGrafico, setLoadingGrafico] = useState(true);
@@ -72,7 +73,7 @@ function UsuarioPage() {
   
         const data = await response.json()
         setUsuario(data);
-        setEditData({ nome: data.nome, email: data.email });
+        setEditData({ nome: data.nome, email: data.email, site: data.site, app: data.app });
       } catch (error) {
         console.error('Erro ao buscar usuário:', error);
         setTimeout(() => router.push('/usuarios'), 100); // Pequeno delay para evitar conflitos de renderização
@@ -101,6 +102,8 @@ function UsuarioPage() {
 
       setUsuario({ ...usuario, ...editData });
       setIsEditModalOpen(false);
+
+      toast.success("Usuário editado com sucesso!");
     } catch (error) {
       console.error(error);
     }
@@ -119,6 +122,7 @@ function UsuarioPage() {
       });
 
       if (!response.ok) throw new Error('Erro ao excluir usuário');
+      toast.success("Usuário excluído com sucesso!");
       router.push('/usuarios');
     } catch (error) {
       console.error(error);
@@ -299,10 +303,26 @@ function UsuarioPage() {
                 onChange={(e) => setEditData({ ...editData, email: e.target.value })}
               />
             </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={!!editData.app} // Converte para boolean
+                onCheckedChange={(checked) => setEditData({ ...editData, app: Boolean(checked) })}
+              />
+              <Label>Acesso ao Aplicativo</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={!!editData.site}
+                onCheckedChange={(checked) => setEditData({ ...editData, site: Boolean(checked) })}
+              />
+
+              <Label>Acesso ao Site</Label>
+            </div>
             <Button onClick={handleEdit}>Salvar Alterações</Button>
           </div>
         </DialogContent>
       </Dialog>
+
 
       {/* Modal de Confirmação de Exclusão */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>

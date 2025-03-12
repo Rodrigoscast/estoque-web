@@ -22,7 +22,8 @@ const Projeto = sequelize.define('Projeto', {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0
-    }
+    },
+    data_entrega: {type: DataTypes.DATE}
 }, {
     tableName: 'projeto',
     timestamps: false

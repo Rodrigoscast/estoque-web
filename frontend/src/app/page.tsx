@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -14,39 +16,76 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotMessage, setForgotMessage] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       router.push("/projetos");
     }
+
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    if (savedEmail) {
+      setEmail(savedEmail);
+    }
   }, [router]);
 
-  const handleLogin = async (e) => {
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
+            },
+            credentials: 'include', // Envia cookies
+            body: JSON.stringify({ email, senha, rememberMe })
+        });
+
+        if (!response.ok) {
+            throw new Error('Credenciais inválidas');
+        }
+
+        const { token } = await response.json();
+        localStorage.setItem('token', token); // Salva o token no localStorage
+
+        if (rememberMe) {
+          localStorage.setItem("rememberedEmail", email);
+        } else {
+          localStorage.removeItem("rememberedEmail");
+        }
+
+        router.push('/projetos');
+
+    } catch (err: any) {
+        setError(err.message);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setForgotMessage('');
+    setError('');
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/esqueciSenha`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
-        },
-        body: JSON.stringify({ email, senha })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail })
       });
 
       if (!response.ok) {
-        throw new Error('Credenciais inválidas');
+        throw new Error('Erro ao enviar email de recuperação');
       }
 
-      const data = await response.json().json(); // ❗ Correção: Transformar resposta em JSON
-
-      localStorage.setItem('token', data.token); // ❗ Correção: Usar `data.token` corretamente
-
-      router.push('/projetos');
-
-    } catch (err) {
+      setForgotMessage('Email enviado com sucesso! Verifique sua caixa de entrada.');
+    } catch (err: any) {
       setError(err.message);
     }
   };
@@ -59,7 +98,7 @@ export default function LoginPage() {
             <img src="/logo.png" alt="Logo" className="w-40 mx-auto" />
           </div>
           <div>
-            <form onSubmit={handleLogin}>
+            <form onSubmit={handleLogin} autoComplete="on">
               <div className="space-y-6">
                 <div className='text-center'>
                   <h1 className="text-4xl font-bold">Bem-vindo de volta!</h1>
@@ -73,6 +112,7 @@ export default function LoginPage() {
                     placeholder='Digite seu email'
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    autoComplete="email"
                   />
                 </div>
                 <div>
@@ -85,6 +125,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       className="pr-10"
+                      autoComplete="current-password"
                     />
                     <button
                       type="button"
@@ -94,6 +135,48 @@ export default function LoginPage() {
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
+                </div>
+                <div className='flex w-full'>
+                  <div className="flex items-center justify-start space-x-2 w-full">
+                  <Checkbox 
+                    id="permanece" 
+                    checked={rememberMe} 
+                    onCheckedChange={(checked) => setRememberMe(checked === true)} 
+                  />
+                    <label
+                      htmlFor="permanece"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Permanecer Logado
+                    </label>
+                  </div>
+                  {/* 🔹 Botão para abrir o modal */}
+                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                    <DialogTrigger asChild>
+                      <div className="text-blue-500 text-sm w-full flex justify-end font-bold cursor-pointer">
+                        Esqueceu sua Senha?
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Esqueci minha senha</DialogTitle>
+                        <DialogDescription>Digite seu e-mail para receber as instruções de recuperação</DialogDescription>
+                      </DialogHeader>
+                      <div>
+                        <Label>Email</Label>
+                        <Input
+                          type="email"
+                          value={forgotEmail}
+                          placeholder="Digite seu email"
+                          onChange={(e) => setForgotEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                      {forgotMessage && <p className="text-green-500 text-sm">{forgotMessage}</p>}
+                      {error && <p className="text-red-500 text-sm">{error}</p>}
+                      <Button onClick={handleForgotPassword} className="w-full">Enviar</Button>
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 {error && <p className="text-red-500 text-sm">{error}</p>}
                 <Button type="submit" className="w-full">

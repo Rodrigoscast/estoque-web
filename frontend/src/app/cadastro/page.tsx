@@ -16,7 +16,7 @@ export default function CadastroPage() {
   const [success, setSuccess] = useState('');
   const router = useRouter();
 
-  const handleCadastro = async (e) => {
+  const handleCadastro = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -38,7 +38,7 @@ export default function CadastroPage() {
 
       setSuccess('Usuário cadastrado com sucesso!');
       setTimeout(() => router.push('/'), 2000); // Redireciona para login após cadastro
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     }
   };

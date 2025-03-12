@@ -1,0 +1,22 @@
+#Estoque
+
+Divisão de peças por projeto
+Tempo de produção de cada peça
+
+#Estoque
+Adicionar divisão de cada peça por projeto
+Dentro do projeto dividir comerciais e não comerciais
+Não mostrar peças que não estejam em projetos ativos, mas adicionar opção de mostrar peças de projetos concluídos.
+Manter configuração atual para itens comerciais, outros itens vão ter apenas de projetos ativos.
+
+#Projetos
+Adicionar no relatório do projeto e do subprojetos adições pendentes
+Adicionar no histórico tempo de entrega de cada grupo de peças
+Adicionar relatório de tempo médio por peça
+Itens comerciais não tem tempo de produção
+Adicionar barragem que não permite usuário retirar peças sem estarem categorizadas.
+
+#Aplicativo
+Aba de "Pendentes" com grupo de peças ainda não finalizado
+Quando o usuário escolhe as peças e as quantidades eu gero uma adição pendente, quando o usuário conclui eu finalizo as peças.
+

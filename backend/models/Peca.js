@@ -1,15 +1,16 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database'); // Caminho correto para a configuração do banco
+const sequelize = require('../config/database');
 
 const Peca = sequelize.define('Peca', {
     cod_peca: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     nome: { type: DataTypes.STRING(300), allowNull: false },
     imagem: { type: DataTypes.STRING(500) },
     quantidade: { type: DataTypes.INTEGER, allowNull: false },
-    valor: { type: DataTypes.FLOAT, allowNull: false }
+    valor: { type: DataTypes.FLOAT, allowNull: false },
+    cod_categoria: { type: DataTypes.INTEGER }
 }, {
-    tableName: 'pecas',  // Evita que o Sequelize tente pluralizar o nome da tabela
-    timestamps: false       // Desativa createdAt e updatedAt
+    tableName: 'pecas',
+    timestamps: false
 });
 
 module.exports = Peca;
