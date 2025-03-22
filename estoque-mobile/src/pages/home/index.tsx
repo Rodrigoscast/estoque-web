@@ -111,7 +111,7 @@ export default function HomeScreen() {
   );
 
   const handleProjectPress = (project) => {
-    navigation.navigate("Escolher Peças", { cod_projeto: project.cod_projeto });
+    navigation.navigate("Escolher Peças Para Produção", { cod_projeto: project.cod_projeto });
   };
 
   const handleProjectLongPress = async (project) => {
@@ -123,7 +123,7 @@ export default function HomeScreen() {
 
   const handleSubProjectPress = (subProject) => {
     setModalVisible(false);
-    navigation.navigate("Escolher Peças", { cod_projeto: subProject.cod_projeto });
+    navigation.navigate("Escolher Peças Para Produção", { cod_projeto: subProject.cod_projeto });
   };
 
   return (

@@ -4,6 +4,7 @@ import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, Alert } 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store"; 
 import { useNavigation, useRoute } from "@react-navigation/native";
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 export default function InserirQuantidadeScreen() {
     const navigation = useNavigation();
@@ -47,9 +48,18 @@ export default function InserirQuantidadeScreen() {
 
         try {
             const token = await SecureStore.getItemAsync("accessToken");
-            const dataPegou = new Date();
-            const dataFormatada = new Date(dataPegou.getTime() - dataPegou.getTimezoneOffset() * 60000)
-                .toISOString();
+
+            // Verifica se há peças com quantidade inválida
+            const podeRetirar = pecasSelecionadas.filter(retirada => {
+                const quantidade = Number(quantidades[retirada.cod_peca] || 0);
+                return quantidade <= 0;
+            });
+
+            if (podeRetirar.length > 0) {
+                const nomesPecas = podeRetirar.map(peca => peca.nome || `Peça ${peca.cod_peca}`).join(", ");
+                Alert.alert("Erro", `Insira as quantidades para as peças: ${nomesPecas}`);
+                return;
+            }
 
             const retiradas = pecasSelecionadas.map(peca => {
                 const quantidade = Number(quantidades[peca.cod_peca] || 0);
@@ -58,17 +68,12 @@ export default function InserirQuantidadeScreen() {
                     cod_peca: Number(peca.cod_peca),
                     cod_user: Number(userCode),
                     quantidade,
-                    data_pegou: dataFormatada,
                 };
             }).filter(retirada => retirada.quantidade > 0);
 
-            if (retiradas.length === 0) {
-                Alert.alert("Erro", "Insira a quantidade para pelo menos uma peça.");
-                return;
-            }
 
             await Promise.all(retiradas.map(async (retirada) => {
-                await fetch(`${process.env.EXPO_PUBLIC_API_URL}/pegou_peca`, {
+                await fetch(`${process.env.EXPO_PUBLIC_API_URL}/carrinho_app`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -79,7 +84,7 @@ export default function InserirQuantidadeScreen() {
                 });
             }));
 
-            Alert.alert("Sucesso", "Peças retiradas com sucesso!");
+            Alert.alert("Sucesso", "Peças adicionadas ao carrinho!");
             navigation.replace("Projetos");
         } catch (error) {
             console.error("Erro ao retirar peça:", error);
@@ -104,10 +109,10 @@ export default function InserirQuantidadeScreen() {
                     onChangeText={(text) => {
                         const valor = Number(text) || 0;
 
-                        if (valor > item.estoque) {
+                        if (valor > item.quantidade_disponivel) {
                             Alert.alert(
-                                "Quantidade indisponível",
-                                `Estoque atual dessa peça: ${item.estoque}`
+                                "Quantidade acima do permitido.",
+                                `Máximo disponível para esse projeto: ${item.quantidade_disponivel}`
                             );
                         } else {
                             setQuantidades({ ...quantidades, [item.cod_peca]: valor.toString() });
@@ -124,7 +129,15 @@ export default function InserirQuantidadeScreen() {
         onPress={handleConfirmar}
         disabled={loading} // Desativa o botão enquanto carrega
     >
-        <Text style={styles.botaoTexto}>{loading ? "Aguarde..." : "Confirmar"}</Text>
+        {loading ? (
+            <Text style={styles.botaoTexto}> 
+                "Aguarde..."                
+            </Text>
+        ) : (
+            <Text style={styles.botaoTextoCar}> 
+                <AntDesign name="plus" size={18} color="white" /> <AntDesign name="shoppingcart" size={28} color="white" />
+            </Text>
+        )}        
     </TouchableOpacity>
 </View>
     );
@@ -164,6 +177,14 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
         fontWeight: "bold",
+    },
+    botaoTextoCar: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "bold",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
     },
     botaoDesabilitado: {
         backgroundColor: "#ccc", // Cor mais clara para indicar desativado

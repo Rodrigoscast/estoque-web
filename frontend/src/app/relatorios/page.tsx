@@ -5,15 +5,16 @@ import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import withAuth from '@/components/hoc/withAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LayoutDashboard, Cog, HandCoins, CircleDollarSign } from "lucide-react";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import styled from 'styled-components';
 
 const relatoriosDisponiveis = [
-  { id: 'estoque-baixo', titulo: 'Relatório de Peças' },
-  { id: 'variacao-peca', titulo: 'Variação de Valor das Peças' },
-  { id: 'previsao', titulo: 'Previsão Financeira' },
-  { id: 'projetos', titulo: 'Relatório de Projetos' }
+  { id: 'estoque-baixo', titulo: 'Relatório de Peças', icone: < Cog size={48} />},
+  { id: 'variacao-peca', titulo: 'Variação de Valor das Peças', icone: < HandCoins size={48} /> },
+  { id: 'previsao', titulo: 'Previsão Financeira', icone: < CircleDollarSign size={48} /> },
+  { id: 'projetos', titulo: 'Relatório de Projetos', icone: < LayoutDashboard size={48} /> }
 ];
 
 function RelatoriosPage() {
@@ -52,12 +53,17 @@ function RelatoriosPage() {
             className="cursor-pointer hover:bg-gray-100"
             onClick={() => router.push(`/relatorios/${relatorio.id}`)}
           >
-            <CardHeader>
-              <CardTitle>{relatorio.titulo}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Clique para visualizar este relatório.</p>
-            </CardContent>
+            <div className='flex items-center justify-between w-full'>
+              <div className='flex w-1/5 items-center justify-center'>{relatorio.icone}</div>
+              <div className='flex w-full items-start justify-center flex-col'>
+                <CardHeader>
+                  <CardTitle>{relatorio.titulo}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>Clique para visualizar este relatório.</p>
+                </CardContent>
+              </div>
+            </div>
           </Card>
         ))}
       </div>

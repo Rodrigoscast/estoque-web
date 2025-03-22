@@ -28,7 +28,6 @@ def remove_background(image_path):
 
             # Salva a imagem sobrescrevendo a original
             output_image.save(image_path, "PNG")
-            print(f"Fundo removido e imagem salva: {image_path}")
 
     except Exception as e:
         print(f"Erro ao processar {image_path}: {e}")

@@ -6,8 +6,7 @@ const moment = require("moment");
 const unzipper = require("unzipper");
 const XLSX = require("xlsx");
 const jwt = require("jsonwebtoken");
-const PecaProjeto = require('../models/PecaProjeto');
-const { Categorias, Peca, HistoricoCompras, PegouPeca, Usuario, Projeto } = require('../models/Associations');
+const { Categorias, Peca, HistoricoCompras, PegouPeca, Usuario, Projeto, PecaProjeto } = require('../models/Associations');
 
 const { spawn } = require("child_process");
 
@@ -57,9 +56,8 @@ endpointRoutes.post("/receber-dados", verificarJWT, upload.fields([{ name: "file
 
             // Extrai imagens do .xlsx
             const imagesFolder = path.join(__dirname, "../uploads/pecas/");
+            const uploadFolder = path.join(__dirname, "../uploads/");
             const imageMap = await extractImages(filePath, imagesFolder);
-
-            console.log(imageMap)
 
             // Lê os dados do .xlsx
             const workbook = XLSX.readFile(filePath);
@@ -81,17 +79,29 @@ endpointRoutes.post("/receber-dados", verificarJWT, upload.fields([{ name: "file
 
                 let peca = await Peca.findOne({ where: { nome: nomePeca } });
 
-                console.log(`NumItem: ${numItem}`)
-
                 const imagePath = imageMap[`image${numItem}.png`] || "";
 
-                if (peca) {                   
+                if (peca) {         
                     if (imagePath) {
-                        try {
-                            // Exclui a imagem recém-carregada (se existir)
-                            fs.unlinkSync(path.join(imagesFolder, imagePath));
+                        try {                
+                            let oldImagePath = null; // Declara antes para evitar erro
+                
+                            // Exclui a imagem antiga se existir
+                            if (peca.imagem) {
+                                oldImagePath = path.join(uploadFolder, peca.imagem);
+                                if (fs.existsSync(oldImagePath)) {
+                                    fs.unlinkSync(oldImagePath);
+                                } else {
+                                    console.log(`Imagem antiga não encontrada: ${oldImagePath}`);
+                                }
+                            } else {
+                                console.log('A peça não possui imagem antiga.');
+                            }
+                
+                            // Atualiza o path da imagem no banco
+                            await peca.update({ imagem: imagePath });
                         } catch (err) {
-                            console.error(`Erro ao excluir imagem: ${imagePath}`, err);
+                            console.error(`Erro ao excluir imagem antiga ou atualizar nova imagem para ${peca.nome}:`, err);
                         }
                     }
                 } else {

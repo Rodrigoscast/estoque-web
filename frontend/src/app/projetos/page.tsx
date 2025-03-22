@@ -44,6 +44,7 @@ function Dashboard() {
         );
 
         const data: ProjetoType[] = await response.json()
+
         if (!response.ok) throw new Error("Erro ao buscar projetos");
 
         setProjetos(data);

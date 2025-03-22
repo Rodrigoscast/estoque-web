@@ -1,8 +1,7 @@
 const express = require('express');
 const { Router } = require('express');
 const { Op, Sequelize } = require('sequelize');
-const { Categorias, Peca, HistoricoCompras, PegouPeca, Usuario, Projeto } = require('../models/Associations');
-const PecaProjeto = require('../models/PecaProjeto');
+const { Categorias, Peca, HistoricoCompras, PegouPeca, Usuario, Projeto, PecaProjeto, Carrinho } = require('../models/Associations');
 const relatorioRoutes = express.Router();
 const sequelize = require('../config/database');
 
@@ -14,7 +13,7 @@ relatorioRoutes.get('/pecas-mais-utilizadas', async (req, res) => {
 
         let whereClause = {};
         if (dataInicio && dataFim) {
-            whereClause.data_pegou = {
+            whereClause["$carrinho.data_inicio$"] = {
                 [Op.between]: [new Date(dataInicio), new Date(dataFim)]
             };
         }
@@ -29,6 +28,12 @@ relatorioRoutes.get('/pecas-mais-utilizadas', async (req, res) => {
                     model: Peca,
                     as: 'peca', // Confirme que esse alias está correto no relacionamento!
                     attributes: ['nome', 'imagem']
+                },
+                {
+                    model: Carrinho,
+                    as: 'carrinho', // Certifique-se de que o alias corresponde ao relacionamento no modelo!
+                    attributes: [], // Não precisamos retornar dados do carrinho, apenas filtrar por data_inicio
+                    required: true // Garante que só contemos peças associadas a um carrinho válido
                 }
             ],
             where: whereClause,
@@ -72,6 +77,10 @@ relatorioRoutes.get('/previsao-estoque', async (req, res) => {
         // Buscar quantas peças já foram retiradas para os projetos ativos
         const pecasRetiradas = await PegouPeca.findAll({
             attributes: ['cod_peca', [sequelize.fn('SUM', sequelize.col('quantidade')), 'total_retirado']],
+            where: {
+                data_retirou: { [Op.not]: null },
+                cod_carrinho: { [Op.is]: null }
+            },
             group: ['cod_peca'],
             raw: true
         });
@@ -81,21 +90,55 @@ relatorioRoutes.get('/previsao-estoque', async (req, res) => {
             attributes: [
                 'cod_peca',
                 [sequelize.fn('SUM', sequelize.col('quantidade')), 'quantidade'],
-                [sequelize.literal('EXTRACT(MONTH FROM data_pegou)'), 'mes'],
-                [sequelize.literal('EXTRACT(YEAR FROM data_pegou)'), 'ano']
+                [sequelize.literal('EXTRACT(MONTH FROM "Carrinho"."data_inicio")'), 'mes'],
+                [sequelize.literal('EXTRACT(YEAR FROM "Carrinho"."data_inicio")'), 'ano']
             ],
-            where: { data_pegou: { [Op.gte]: dataInicio } },
-            group: ['cod_peca', sequelize.literal('EXTRACT(YEAR FROM data_pegou)'), sequelize.literal('EXTRACT(MONTH FROM data_pegou)')],
+            include: [
+                {
+                    model: Carrinho,
+                    attributes: [], // Não precisamos dos dados do carrinho, apenas filtrar por data_inicio
+                    required: true // Apenas pegar registros que tenham um carrinho válido
+                }
+            ],
+            where: { "$Carrinho.data_inicio$": { [Op.gte]: dataInicio } },
+            group: [
+                'cod_peca',
+                sequelize.literal('EXTRACT(YEAR FROM "Carrinho"."data_inicio")'),
+                sequelize.literal('EXTRACT(MONTH FROM "Carrinho"."data_inicio")')
+            ],
             order: [
-                [sequelize.literal('EXTRACT(YEAR FROM data_pegou)'), 'ASC'],
-                [sequelize.literal('EXTRACT(MONTH FROM data_pegou)'), 'ASC']
+                [sequelize.literal('EXTRACT(YEAR FROM "Carrinho"."data_inicio")'), 'ASC'],
+                [sequelize.literal('EXTRACT(MONTH FROM "Carrinho"."data_inicio")'), 'ASC']
             ],
             raw: true
         });
 
+        const [tempoPeca] = await sequelize.query(`
+            WITH tempo_total AS (
+                SELECT 
+                    p.cod_peca,
+                    p.cod_carrinho,
+                    EXTRACT(EPOCH FROM (c.data_final - c.data_inicio)) AS tempo_gasto,
+                    SUM(p.quantidade) AS total_pecas
+                FROM pegou_peca p
+                JOIN carrinho c ON p.cod_carrinho = c.cod_carrinho
+                WHERE c.data_inicio IS NOT NULL
+                AND c.data_final IS NOT NULL
+                AND p.data_retirou IS NULL
+                GROUP BY p.cod_peca, p.cod_carrinho, c.data_inicio, c.data_final
+            )
+            SELECT 
+                t.cod_peca,
+                ROUND(AVG(t.tempo_gasto / NULLIF(t.total_pecas, 0)), 2) AS tempo_medio_por_peca
+            FROM tempo_total t
+            GROUP BY t.cod_peca
+            ORDER BY tempo_medio_por_peca ASC;
+        `);
+
         // Criar um mapa para facilitar a busca das peças
         const mapPecasProjeto = Object.fromEntries(pecasProjeto.map(p => [p.cod_peca, p.total_necessario || 0]));
         const mapPecasRetiradas = Object.fromEntries(pecasRetiradas.map(p => [p.cod_peca, p.total_retirado || 0]));
+        const mapTempoPeca = Object.fromEntries(tempoPeca.map(p => [p.cod_peca, p.tempo_medio_por_peca || 0]));
 
         // Criar mapa de consumo de peças por mês para calcular a média ponderada
         const consumoPorPeca = {};
@@ -124,6 +167,7 @@ relatorioRoutes.get('/previsao-estoque', async (req, res) => {
         const resultado = pecas.map(peca => {
             const totalNecessario = mapPecasProjeto[peca.cod_peca] || 0;
             const totalRetirado = mapPecasRetiradas[peca.cod_peca] || 0;
+            const totalTempo = mapTempoPeca[peca.cod_peca] || 0;
             const quantidadeExecutavel = Math.max(totalNecessario - totalRetirado, 0);
             const quantidadePrevista = calcularMediaPonderada(peca.cod_peca) * mesesInt;
 
@@ -131,7 +175,8 @@ relatorioRoutes.get('/previsao-estoque', async (req, res) => {
                 cod_peca: peca.cod_peca,
                 nome: peca.nome,
                 quantidade_prevista: quantidadePrevista,
-                quantidade_executavel: quantidadeExecutavel
+                quantidade_executavel: quantidadeExecutavel,
+                tempo: totalTempo
             };
         });
 

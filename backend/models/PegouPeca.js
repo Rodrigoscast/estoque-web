@@ -10,7 +10,8 @@ const PegouPeca = sequelize.define('PegouPeca', {
     cod_projeto: { type: DataTypes.INTEGER },
     cod_peca: { type: DataTypes.INTEGER },
     quantidade: { type: DataTypes.INTEGER, allowNull: false },
-    data_pegou: { type: DataTypes.DATE }
+    cod_carrinho: { type: DataTypes.INTEGER },
+    data_retirou: { type: DataTypes.DATE },
 }, {
     tableName: 'pegou_peca',  // Evita que o Sequelize tente pluralizar o nome da tabela
     timestamps: false       // Desativa createdAt e updatedAt

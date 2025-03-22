@@ -14,7 +14,7 @@ import { format } from "date-fns";
 interface ProjetoProps {
   id: number;
   nome: string;
-  imagem: string;
+  imagem: string; 
   min: number;
   max: number;
   data_entrada: string;
@@ -53,7 +53,7 @@ export default function Projeto({ id, nome, imagem, min, max, data_entrada, data
           const data = await response.json()
           setPecas(data);
         } catch (err) {
-          console.error("Erro ao buscar peças:", err);
+          console.error("Erro ao buscar partes:", err);
         }
       };
   
@@ -65,9 +65,8 @@ export default function Projeto({ id, nome, imagem, min, max, data_entrada, data
   const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
   const destinoNew = new Date();
 
-  var primeira_data = '';
-
   const partes_data_entrega = data_entrega.split("-");
+
   const destino = new Date(
       parseInt(partes_data_entrega[0]),  // Ano
       parseInt(partes_data_entrega[1]) - 1, // Mês (JS começa do 0)
@@ -87,12 +86,12 @@ export default function Projeto({ id, nome, imagem, min, max, data_entrada, data
           parseInt(partes_data_entrada[2])  // Dia
       );
   } else {
-  const partes_data_entrada = data_entrada.split("-");
-      inicio = new Date(
-      parseInt(partes_data_entrada[0]),  // Ano
-      parseInt(partes_data_entrada[1]) - 1, // Mês (JS começa do 0)
-      parseInt(partes_data_entrada[2])  // Dia
-  );
+    const partes_data_entrada = data_entrada.split("-");
+        inicio = new Date(
+        parseInt(partes_data_entrada[0]),  // Ano
+        parseInt(partes_data_entrada[1]) - 1, // Mês (JS começa do 0)
+        parseInt(partes_data_entrada[2])  // Dia
+    );
   }
 
   // Agora inicio está definido corretamente e pode ser usado abaixo
@@ -122,10 +121,10 @@ export default function Projeto({ id, nome, imagem, min, max, data_entrada, data
   const getCardColor = (atraso: number) => {
       if (concluido == true) return "rgba(119, 119, 119, 0.8)"; // Se estiver concluído, fica no cinza
       if (atraso === 0) return "rgba(76, 175, 79, 0.8)"; // Verde (No prazo)
-      if (atraso <= 0.2) return "rgba(139, 195, 74, 0.8)"; // Amarelo-Verde (Ligeiramente atrasado)
-      if (atraso <= 0.4) return "rgba(255, 235, 59, 0.8)"; // Amarelo (Atrasado moderado)
-      if (atraso <= 0.6) return "rgba(255, 152, 0, 0.8)"; // Laranja (Atraso preocupante)
-      if (atraso <= 0.8) return "rgba(255, 87, 34, 0.8)"; // Vermelho-Claro (Muito atrasado)
+      if (atraso <= 0.3) return "rgba(139, 195, 74, 0.8)"; // Amarelo-Verde (Ligeiramente atrasado)
+      if (atraso <= 0.5) return "rgba(255, 235, 59, 0.8)"; // Amarelo (Atrasado moderado)
+      if (atraso <= 0.7) return "rgba(255, 152, 0, 0.8)"; // Laranja (Atraso preocupante)
+      if (atraso <= 0.9) return "rgba(255, 87, 34, 0.8)"; // Vermelho-Claro (Muito atrasado)
       return "rgba(244, 67, 54, 0.8)"; // Vermelho (Atraso crítico)
   };
 
@@ -218,7 +217,7 @@ export default function Projeto({ id, nome, imagem, min, max, data_entrada, data
                 className="text-white text-md w-full h-full rounded-none bg-black/30 hover:bg-black/60 hover:text-2xl transition duration-300 ease-in-out"
                 onClick={() => setModalOpen(true)}
               >
-                Peças
+                Partes
               </Button>
             </div>
             </div>
@@ -228,7 +227,7 @@ export default function Projeto({ id, nome, imagem, min, max, data_entrada, data
         <Dialog open={modalOpen} onOpenChange={setModalOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Peças do Projeto</DialogTitle>
+              <DialogTitle>Partes do Projeto</DialogTitle>
             </DialogHeader>
             <ul className="space-y-2">
               {pecas.length > 0 ? (

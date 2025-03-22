@@ -16,6 +16,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const relatorioRoutes = require('./routes/relatorioRoutes');
 const endpointRoutes = require('./routes/endpointRoutes');
 const categoriasRoutes = require('./routes/categoriasRoutes');
+const CarrinhoAPP = require('./routes/carrinhoAppRoutes');
 
 const app = express();
 app.use(express.json());
@@ -44,6 +45,7 @@ app.use('/pegou_peca', pegouPecaRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/relatorios', relatorioRoutes);
 app.use('/categorias', categoriasRoutes);
+app.use('/carrinho_app', CarrinhoAPP);
 
 sequelize.sync().then(() => {
     console.log('Banco de dados sincronizado 🚀');

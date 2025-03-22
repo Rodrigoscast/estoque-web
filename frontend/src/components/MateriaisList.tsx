@@ -20,7 +20,7 @@ export default function MateriaisList({ materiais }: MateriaisListProps) {
             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
           >
             <span className="font-medium">{material.nome}</span>
-            <span className="text-gray-600">{material.quantidade}</span>
+            <span className="font-medium">({material.quantidade}x)</span>
           </li>
         ))}
       </ul>

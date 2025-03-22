@@ -1,5 +1,5 @@
 const express = require('express');
-const PecaProjeto = require('../models/PecaProjeto');
+const { Categorias, Peca, HistoricoCompras, PegouPeca, Usuario, Projeto, PecaProjeto } = require('../models/Associations');
 const routerPecaProjeto = express.Router();
 
 // Listar todas as associações peça-projeto

@@ -1,22 +1,28 @@
-#Estoque
+Dados Importantes
 
-Divisão de peças por projeto
-Tempo de produção de cada peça
+#Divisão de peças por projeto
+#Tempo de produção de cada peça
 
-#Estoque
-Adicionar divisão de cada peça por projeto
-Dentro do projeto dividir comerciais e não comerciais
-Não mostrar peças que não estejam em projetos ativos, mas adicionar opção de mostrar peças de projetos concluídos.
-Manter configuração atual para itens comerciais, outros itens vão ter apenas de projetos ativos.
+#Dividir retirada em Peças Comerciais e Não comerciais
 
-#Projetos
-Adicionar no relatório do projeto e do subprojetos adições pendentes
-Adicionar no histórico tempo de entrega de cada grupo de peças
-Adicionar relatório de tempo médio por peça
-Itens comerciais não tem tempo de produção
-Adicionar barragem que não permite usuário retirar peças sem estarem categorizadas.
+#Comerciais: Quando eu pego uma peça dessas no projeto ele reduz do estoque e só.
+#Não comerciais: Quando eu pego uma peça dessas para o carrinho o sistema aumenta o estoque pq eu to produzindo, depois eu retiro a peça para o projeto. Rota de produção é "Não Produzida" // "Produzida" // "Adicionada ao Projeto"
 
-#Aplicativo
-Aba de "Pendentes" com grupo de peças ainda não finalizado
-Quando o usuário escolhe as peças e as quantidades eu gero uma adição pendente, quando o usuário conclui eu finalizo as peças.
+#Retirar peça é projeto por projeto. Produzir pode ser várias.
 
+#Se o cod_carrinho for 0 é uma retirada, caso contrário ele aponta para o carrinho
+
+==========================================================================================================================================
+
+Falta Fazer
+APP
+>Projetos
+	Imagem das peças
+	Ao confirmar gera uma produção
+	Carrinho (posso pegar peças de vários projetos)
+>Produzindo
+	Mostra carrinhos em aberto daquele usuário logado
+>Retirada
+	Tela inicial atual, não muda nada (apenas questão de rotas)
+
+==========================================================================================================================================

@@ -27,6 +27,7 @@ interface Peca {
     imagem?: string;
     quantidade_prevista: number;
     quantidade_executavel: number;
+    tempo: number;
 }
 
 function RelatorioPecas() {
@@ -115,10 +116,11 @@ function RelatorioPecas() {
             const previsaoData = await previsaoResponse.json();
 
             // Criar dicionário de previsão
-            const previsaoDict = previsaoData.reduce((acc: Record<number, { quantidade_prevista: number; quantidade_executavel: number }>, item: any) => {
+            const previsaoDict = previsaoData.reduce((acc: Record<number, { quantidade_prevista: number; quantidade_executavel: number, tempo: number}>, item: any) => {
             acc[item.cod_peca] = {
                 quantidade_prevista: item.quantidade_prevista,
                 quantidade_executavel: item.quantidade_executavel,
+                tempo: item.tempo,
             };
             return acc;
             }, {});
@@ -147,6 +149,7 @@ function RelatorioPecas() {
                 cod_categoria: isSemCategoria ? categoriaNaoCategorizada!.cod_categoria : peca.cod_categoria,
                 quantidade_prevista: previsaoDict[peca.cod_peca]?.quantidade_prevista || 0,
                 quantidade_executavel: previsaoDict[peca.cod_peca]?.quantidade_executavel || 0,
+                tempo: previsaoDict[peca.cod_peca]?.tempo || 0,
             };
             });
 
@@ -166,14 +169,28 @@ function RelatorioPecas() {
         fetchData();
     }, []);
 
-  const imprimirRelatorio = () => {
-    const printContent = document.getElementById('relatorio-pecas').innerHTML;
-    const originalContent = document.body.innerHTML;
-    document.body.innerHTML = `<h1 style='text-align: center; font-size: 24px; margin-bottom: 6px;'>Relatório de Peças</h1>` + printContent;
-    window.print();
-    document.body.innerHTML = originalContent;
-    window.location.reload();
-  };
+    const imprimirRelatorio = () => {
+        const relatorioElement = document.getElementById('relatorio-pecas');
+      
+        if (!relatorioElement) {
+          console.error("Elemento 'relatorio-pecas' não encontrado!");
+          return;
+        }
+      
+        const printContent = relatorioElement.innerHTML;
+        const originalContent = document.body.innerHTML;
+      
+        document.body.innerHTML = `
+          <h1 style="text-align: center; font-size: 24px; margin-bottom: 6px;">
+            Relatório de Peças
+          </h1>
+          ${printContent}
+        `;
+      
+        window.print();
+        document.body.innerHTML = originalContent;
+        window.location.reload();
+      };
 
   const getCardColor = (quantidade: number, quantidade_prevista: number, quantidade_executavel: number) => {
     if (quantidade_prevista <= quantidade_executavel){
@@ -223,7 +240,22 @@ function RelatorioPecas() {
         return 0;
     });
 
+    // Função para formatar tempo em dias, horas, minutos e segundos
+  const formatarTempo = (segundos: number) => {
+    const dias = Math.floor(segundos / 86400);
+    const horas = Math.floor((segundos % 86400) / 3600);
+    const minutos = Math.floor((segundos % 3600) / 60);
+    const segundosRestantes = Math.floor(segundos % 60);
 
+    let resultado = [];
+
+    if (dias > 0) resultado.push(`${dias}d`);
+    if (horas > 0 || dias > 0) resultado.push(`${horas}h`);
+    if (minutos > 0 || horas > 0 || dias > 0) resultado.push(`${minutos}m`);
+    if (segundosRestantes > 0 || resultado.length === 0) resultado.push(`${segundosRestantes}s`);
+
+    return resultado.join(" ");
+  };
 
   return (
     <Layout>
@@ -334,7 +366,7 @@ function RelatorioPecas() {
                 <TableHead className='font-bold'>Nome da Peça</TableHead>
                 <TableHead className='font-bold'>Quantidade em Estoque</TableHead>
                 <TableHead className='font-bold'>{mesesSelecionados == '1' ? "Comprado no último mês" : `Comprado nos últimos ${mesesSelecionados} meses`}</TableHead>
-                <TableHead className='font-bold'>Valor por Peça</TableHead>
+                <TableHead className='font-bold'>Tempo / Valor por Peça</TableHead>
                 <TableHead className='font-bold'>Categoria</TableHead>
                 </TableRow>
             </TableHeader>
@@ -351,7 +383,11 @@ function RelatorioPecas() {
                         <TableCell>{peca.nome}</TableCell>
                         <TableCell>{peca.quantidade}</TableCell>
                         <TableCell>{comprado ? comprado.quantidade : "0"}</TableCell>
-                        <TableCell>R${peca.valor.toFixed(2)}</TableCell>
+                        {categoria?.cod_categoria == 1? (
+                            <TableCell>R${peca.valor.toFixed(2)}</TableCell>
+                        ): (
+                            <TableCell>{formatarTempo(peca.tempo)}</TableCell>
+                        )}                        
                         <TableCell>{categoria ? categoria.nome : "Sem categoria"}</TableCell>
                         </TableRow>
                     );

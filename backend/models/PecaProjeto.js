@@ -12,7 +12,4 @@ const PecaProjeto = sequelize.define('PecaProjeto', {
     timestamps: false       // Desativa createdAt e updatedAt
 });
 
-PecaProjeto.belongsTo(Projeto, { foreignKey: 'cod_projeto' });
-PecaProjeto.belongsTo(Peca, { foreignKey: 'cod_peca' });
-
 module.exports = PecaProjeto;
