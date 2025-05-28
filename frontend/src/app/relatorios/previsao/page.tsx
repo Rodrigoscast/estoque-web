@@ -11,11 +11,19 @@ import withAuth from '@/components/hoc/withAuth';
 import { customFetch } from '@/utils/CustomFetch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+interface Compra {
+  id: number;
+  data_compra: string;
+  nome: string;
+  quantidade: number;
+  valor: number;
+}
+
 function RelatorioComprasPorPeriodo() {
     const [dataInicio, setDataInicio] = useState<Date | null>(null);
     const [dataFim, setDataFim] = useState<Date | null>(null);
     const [open, setOpen] = useState(false);
-    const [compras, setCompras] = useState([]);
+    const [compras, setCompras] = useState<Compra[]>([]);
 
     const buscarRelatorio = async () => {
         if (!dataInicio || !dataFim) {
@@ -49,7 +57,7 @@ function RelatorioComprasPorPeriodo() {
         return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor);
     };
 
-    const handleDateChange = (date) => {
+    const handleDateChange = (date: any) => {
       if (!dataInicio || (dataInicio && dataFim)) {
         setDataInicio(date);
         setDataFim(null);
@@ -60,13 +68,23 @@ function RelatorioComprasPorPeriodo() {
     };
   
     const imprimirRelatorio = () => {
-      const printContent = document.getElementById("relatorio-pecas").innerHTML;
+      const relatorio = document.getElementById("relatorio-pecas");
+      if (!relatorio) {
+        alert("Elemento do relatório não encontrado!");
+        return;
+      }
+
+      const printContent = relatorio.innerHTML;
       const originalContent = document.body.innerHTML;
-      document.body.innerHTML = `<h1 style='text-align: center; font-size: 24px; margin-bottom: 6px;'>Relatório de Peças</h1>` + printContent;
+      document.body.innerHTML = `
+        <h1 style='text-align: center; font-size: 24px; margin-bottom: 6px;'>Relatório de Peças</h1>
+        ${printContent}
+      `;
       window.print();
       document.body.innerHTML = originalContent;
       window.location.reload();
     };
+
 
     return (
         <Layout>
@@ -82,7 +100,11 @@ function RelatorioComprasPorPeriodo() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent>
-                      <Calendar mode="single" selected={dataInicio || dataFim} onSelect={handleDateChange} />
+                      <Calendar
+                        mode="single"
+                        selected={dataInicio || dataFim || undefined}
+                        onSelect={handleDateChange}
+                      />
                     </PopoverContent>
                   </Popover>
                   <Button onClick={buscarRelatorio}>

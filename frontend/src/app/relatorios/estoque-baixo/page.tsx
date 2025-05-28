@@ -41,7 +41,7 @@ function RelatorioPecas() {
     const [pecas, setPecas] = useState<Peca[]>([]);
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [categoriaSelecionada, setCategoriaSelecionada] = useState("");
-    const [retiradas, setRetiradas] = useState([]);
+    const [retiradas, setRetiradas] = useState<Peca[]>([]);
     const [tempoRetiradas, setTempoRetiradas] = useState("1");
 
     useEffect(() => {
@@ -190,7 +190,7 @@ function RelatorioPecas() {
         window.print();
         document.body.innerHTML = originalContent;
         window.location.reload();
-      };
+    };
 
   const getCardColor = (quantidade: number, quantidade_prevista: number, quantidade_executavel: number) => {
     if (quantidade_prevista <= quantidade_executavel){

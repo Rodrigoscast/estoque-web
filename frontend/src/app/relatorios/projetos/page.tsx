@@ -10,9 +10,27 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { customFetch } from '@/utils/CustomFetch';
 
+interface Projeto {
+  cod_projeto: number;
+  nome: string;
+  pecas_totais: number;
+  pecas_atuais: number;
+  data_entrada?: string | null;
+  data_entrega?: string | null;
+  concluido: boolean;
+}
+
+interface Subprojeto {
+  cod_projeto: number;
+  nome: string;
+  pecas_totais: number;
+  pecas_atuais: number;
+  concluido: boolean;
+}
+
 function RelatorioProjetos() {
-  const [projetos, setProjetos] = useState([]);
-  const [subprojetos, setSubprojetos] = useState({});
+  const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [subprojetos, setSubprojetos] = useState<Record<number, Subprojeto[]>>({});
   const [loading, setLoading] = useState(true);
   const [mostrarConcluidos, setMostrarConcluidos] = useState(false);
   const [mostrarSubprojetos, setMostrarSubprojetos] = useState(true);
@@ -31,7 +49,7 @@ function RelatorioProjetos() {
             ...(process.env.NEXT_PUBLIC_NGROK_BYPASS === 'true' && { 'ngrok-skip-browser-warning': 'true' })
           },
         });
-        const data = await response.json();
+        const data: Projeto[] = await response.json();
         setProjetos(data);
 
         // Buscar subprojetos para cada projeto
@@ -45,7 +63,7 @@ function RelatorioProjetos() {
     fetchProjetos();
   }, [mostrarConcluidos]);
 
-  async function fetchSubprojetos(projetoId) {
+  async function fetchSubprojetos(projetoId: any) {
     try {
       const token = localStorage.getItem("token");
       const response = await customFetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${projetoId}/pecas`, {
@@ -64,9 +82,23 @@ function RelatorioProjetos() {
   }
 
   const imprimirRelatorio = () => {
-    const printContent = document.getElementById('relatorio-projetos').innerHTML;
+    const relatorioElement = document.getElementById('relatorio-pecas');
+  
+    if (!relatorioElement) {
+      console.error("Elemento 'relatorio-pecas' não encontrado!");
+      return;
+    }
+  
+    const printContent = relatorioElement.innerHTML;
     const originalContent = document.body.innerHTML;
-    document.body.innerHTML = `<h1 style='text-align: center; font-size: 24px; margin-bottom: 6px;'>Relatório de Projetos</h1>` + printContent;
+  
+    document.body.innerHTML = `
+      <h1 style="text-align: center; font-size: 24px; margin-bottom: 6px;">
+        Relatório de Peças
+      </h1>
+      ${printContent}
+    `;
+  
     window.print();
     document.body.innerHTML = originalContent;
     window.location.reload();
