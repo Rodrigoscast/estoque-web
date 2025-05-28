@@ -1,7 +1,7 @@
 [build]
-  command = "npm run build"
-  publish = "frontend/.next"
-  base = "frontend"
+base = "frontend"
+command = "npm run build"
+publish = ".next"  # ✅ Apenas isso, pois já estamos dentro de frontend
 
 [[plugins]]
-  package = "@netlify/plugin-nextjs"
+package = "@netlify/plugin-nextjs"
