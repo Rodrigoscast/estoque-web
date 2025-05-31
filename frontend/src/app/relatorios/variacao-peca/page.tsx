@@ -7,10 +7,21 @@ import Layout from '@/components/Layout';
 import withAuth from '@/components/hoc/withAuth';
 import { customFetch } from '@/utils/CustomFetch';
 
+interface HistoricoPreco {
+  mes: string; // formato "YYYY-MM"
+  preco: number;
+}
+
+interface Peca {
+  cod_peca: number;
+  nome: string;
+  precos: HistoricoPreco[];
+}
+
 function RelatorioVariacaoPrecos() {
-    const [pecas, setPecas] = useState([]);
+    const [pecas, setPecas] = useState<Peca[]>([]);
     const [pecasSelecionadas, setPecasSelecionadas] = useState<string[]>([]);
-    const [dadosGrafico, setDadosGrafico] = useState([]);
+    const [dadosGrafico, setDadosGrafico] = useState<any[]>([]);
 
     useEffect(() => {
         async function fetchData() {
@@ -27,7 +38,7 @@ function RelatorioVariacaoPrecos() {
                 });
 
                 if (!response.ok) throw new Error("Erro ao buscar dados");
-                const data = await response.json();
+                const data: Peca[] = await response.json();
 
                 // Filtrar apenas peças que têm histórico
                 const pecasComHistorico = data.filter(peca => peca.precos.length > 0);
@@ -79,18 +90,24 @@ function RelatorioVariacaoPrecos() {
         <Layout>
             <div className="p-4">
                 <h2 className="text-xl font-bold mb-4">Variação de Preços das Peças</h2>
-                <Select multiple onValueChange={handleSelectChange}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Selecione as peças" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {pecas.map((peca) => (
-                            <SelectItem key={peca.cod_peca} value={peca.cod_peca.toString()}>
-                                {peca.nome}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                <div className="grid gap-2">
+                    {pecas.map((peca) => (
+                        <label key={peca.cod_peca} className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            value={peca.cod_peca}
+                            checked={pecasSelecionadas.includes(peca.cod_peca.toString())}
+                            onChange={(e) => {
+                            const value = e.target.value;
+                            setPecasSelecionadas((prev) =>
+                                e.target.checked ? [...prev, value] : prev.filter((v) => v !== value)
+                            );
+                            }}
+                        />
+                        {peca.nome}
+                        </label>
+                    ))}
+                </div>
 
                 {dadosGrafico.length > 0 ? (
                     <div className="w-full h-96 mt-4">

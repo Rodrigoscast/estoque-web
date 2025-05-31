@@ -41,7 +41,7 @@ function RelatorioPecas() {
     const [pecas, setPecas] = useState<Peca[]>([]);
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [categoriaSelecionada, setCategoriaSelecionada] = useState("");
-    const [retiradas, setRetiradas] = useState([]);
+    const [retiradas, setRetiradas] = useState<Peca[]>([]);
     const [tempoRetiradas, setTempoRetiradas] = useState("1");
 
     useEffect(() => {

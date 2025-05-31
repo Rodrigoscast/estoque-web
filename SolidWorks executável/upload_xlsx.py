@@ -5,7 +5,7 @@ import jwt  # PyJWT para gerar o token JWT
 import os
 
 # CONFIGURAÇÕES DO ENDPOINT
-API_URL = "https://17d6-2804-1e68-8006-53c6-6083-9476-aead-b436.ngrok-free.app/endpoint/receber-dados"
+API_URL = "https://estoque-0j31.onrender.com/endpoint/receber-dados"
 SECRET_KEY = "populus_somnium_non_habet_finem"
 
 def generate_jwt():
