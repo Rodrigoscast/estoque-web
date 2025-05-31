@@ -190,7 +190,7 @@ function RelatorioPecas() {
         window.print();
         document.body.innerHTML = originalContent;
         window.location.reload();
-      };
+    };
 
   const getCardColor = (quantidade: number, quantidade_prevista: number, quantidade_executavel: number) => {
     if (quantidade_prevista <= quantidade_executavel){

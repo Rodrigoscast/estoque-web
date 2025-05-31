@@ -19,10 +19,19 @@ interface Compra {
   valor: number;
 }
 
+interface Compra {
+  id: number;
+  data_compra: string;
+  nome: string;
+  quantidade: number;
+  valor: number;
+}
+
 function RelatorioComprasPorPeriodo() {
     const [dataInicio, setDataInicio] = useState<Date | null>(null);
     const [dataFim, setDataFim] = useState<Date | null>(null);
     const [open, setOpen] = useState(false);
+    const [compras, setCompras] = useState<Compra[]>([]);
     const [compras, setCompras] = useState<Compra[]>([]);
 
     const buscarRelatorio = async () => {
@@ -81,6 +90,7 @@ function RelatorioComprasPorPeriodo() {
       document.body.innerHTML = originalContent;
       window.location.reload();
     };
+
 
 
     return (

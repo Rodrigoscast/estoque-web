@@ -28,7 +28,27 @@ interface Subprojeto {
   concluido: boolean;
 }
 
+interface Projeto {
+  cod_projeto: number;
+  nome: string;
+  pecas_totais: number;
+  pecas_atuais: number;
+  data_entrada?: string | null;
+  data_entrega?: string | null;
+  concluido: boolean;
+}
+
+interface Subprojeto {
+  cod_projeto: number;
+  nome: string;
+  pecas_totais: number;
+  pecas_atuais: number;
+  concluido: boolean;
+}
+
 function RelatorioProjetos() {
+  const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [subprojetos, setSubprojetos] = useState<Record<number, Subprojeto[]>>({});
   const [projetos, setProjetos] = useState<Projeto[]>([]);
   const [subprojetos, setSubprojetos] = useState<Record<number, Subprojeto[]>>({});
   const [loading, setLoading] = useState(true);

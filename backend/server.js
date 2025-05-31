@@ -26,7 +26,7 @@ app.use(cookieParser());
 
 // Adicione isso antes das rotas
 app.use(cors({
-    origin: 'http://localhost:3001', // Altere para o endereço do seu frontend
+    origin: 'https://conformeaco.netlify.app', // Altere para o endereço do seu frontend
     credentials: true, // Permite envio de cookies e headers de autenticação
 }));
 

@@ -20,6 +20,7 @@ interface Peca {
 
 function RelatorioVariacaoPrecos() {
     const [pecas, setPecas] = useState<Peca[]>([]);
+    const [pecas, setPecas] = useState<Peca[]>([]);
     const [pecasSelecionadas, setPecasSelecionadas] = useState<string[]>([]);
     const [dadosGrafico, setDadosGrafico] = useState<any[]>([]);
 
@@ -38,6 +39,7 @@ function RelatorioVariacaoPrecos() {
                 });
 
                 if (!response.ok) throw new Error("Erro ao buscar dados");
+                const data: Peca[] = await response.json();
                 const data: Peca[] = await response.json();
 
                 // Filtrar apenas peças que têm histórico
