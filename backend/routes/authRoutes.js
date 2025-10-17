@@ -16,7 +16,7 @@ router.post('/register', async (req, res) => {
         const { nome, email, senha } = req.body;
 
         // Verifica se o email já existe
-        const usuarioExistente = await Usuario.findOne({ where: { email, ativado: 1 } });
+        const usuarioExistente = await Usuario.findOne({ where: { email, ativado: true } });
         if (usuarioExistente) {
             return res.status(400).json({ error: 'Email já cadastrado' });
         }

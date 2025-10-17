@@ -1,116 +1,139 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import requests
-import jwt  # PyJWT para gerar o token JWT
+import jwt
 import os
+import traceback
 
-# CONFIGURAÇÕES DO ENDPOINT
-API_URL = "https://estoque-0j31.onrender.com/endpoint/receber-dados"
+API_URL = "http://localhost:3000/endpoint/receber-dados"
 SECRET_KEY = "populus_somnium_non_habet_finem"
 
 def generate_jwt():
     """Gera um token JWT para autenticação"""
-    payload = {"user": "admin"}  # Pode adicionar mais dados conforme necessário
+    payload = {"user": "admin"}
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+    print(f"[JWT] Token gerado: {token}")
     return token
 
 def select_folder():
-    """Abre a janela para selecionar a pasta do projeto"""
+    print("[DEBUG] Abrindo seletor de pasta...")
     folder_path = filedialog.askdirectory(title="Selecione a pasta do projeto")
-    
     if not folder_path:
+        print("[DEBUG] Nenhuma pasta selecionada.")
         return
-    
+    print(f"[DEBUG] Pasta selecionada: {folder_path}")
+
     rename_files(folder_path)
     selected_folder.set(folder_path)
     list_xlsx_files(folder_path)
 
 def list_xlsx_files(folder_path):
-    """Lista os arquivos .xlsx na pasta selecionada"""
+    print(f"[DEBUG] Listando arquivos .xlsx e .png em: {folder_path}")
     xlsx_files = [f for f in os.listdir(folder_path) if f.endswith(".xlsx")]
     png_files = [f for f in os.listdir(folder_path) if f.endswith((".png", ".PNG"))]
+    print(f"[DEBUG] XLSX encontrados: {xlsx_files}")
+    print(f"[DEBUG] PNG encontrados: {png_files}")
 
     if not xlsx_files:
         messagebox.showerror("Erro", "Nenhum arquivo .xlsx encontrado na pasta selecionada.")
         return
     
-    # Limpa a lista e adiciona os arquivos encontrados
     listbox_files.delete(0, tk.END)
     for file in xlsx_files:
         listbox_files.insert(tk.END, file)
-    
     selected_files.set("\n".join(xlsx_files))
-    
-    # Verifica se há um arquivo PNG
+
     if png_files:
         selected_image.set(os.path.join(folder_path, png_files[0]))
     else:
         selected_image.set("")
     
-    # Habilita a seleção do projeto principal
     btn_select_main["state"] = tk.NORMAL
 
 def rename_files(folder_path):
-    """Renomeia arquivos .xlsx na pasta, substituindo _ por espaço"""
+    print("[DEBUG] Renomeando arquivos .xlsx...")
     xlsx_files = [f for f in os.listdir(folder_path) if f.endswith(".xlsx")]
     renamed_files = []
 
     for file in xlsx_files:
-        new_name = file.replace("_", " ")  # Substitui os underscores por espaços
+        new_name = file.replace("_", " ")
         old_path = os.path.join(folder_path, file)
         new_path = os.path.join(folder_path, new_name)
 
         if file != new_name:
             try:
-                os.rename(old_path, new_path)  # Renomeia o arquivo no sistema
+                os.rename(old_path, new_path)
+                print(f"[DEBUG] Renomeado: {file} -> {new_name}")
             except Exception as e:
-                new_name = file  # Mantém o nome original se houver erro
+                print(f"[ERRO] Falha ao renomear {file}: {e}")
+                new_name = file
 
         renamed_files.append(new_name)
-
-    return renamed_files  # Retorna a lista de arquivos renomeados
+    return renamed_files
 
 def select_main_project():
-    """Define qual arquivo .xlsx será o principal"""
+    print("[DEBUG] Selecionando projeto principal...")
     selected_index = listbox_files.curselection()
-    
     if not selected_index:
         messagebox.showerror("Erro", "Selecione o projeto principal da lista.")
+        print("[ERRO] Nenhum projeto selecionado.")
         return
     
     selected_file = listbox_files.get(selected_index)
-    
+    print(f"[DEBUG] Projeto principal selecionado: {selected_file}")
     main_project.set(selected_file)
     btn_send["state"] = tk.NORMAL
 
-
 def send_files():
-    """Envia os arquivos e a imagem para o backend"""
+    print("[DEBUG] Iniciando envio de arquivos...")
     folder_path = selected_folder.get()
     files = selected_files.get().split("\n")
     main_project_file = main_project.get()
     image_path = selected_image.get()
-    
+
+    print(f"[DEBUG] Pasta: {folder_path}")
+    print(f"[DEBUG] Arquivos: {files}")
+    print(f"[DEBUG] Projeto principal: {main_project_file}")
+    print(f"[DEBUG] Imagem: {image_path}")
+
     if not folder_path or not files or not main_project_file:
         messagebox.showerror("Erro", "Selecione a pasta e o projeto principal.")
+        print("[ERRO] Campos obrigatórios faltando.")
         return
     
     headers = {"Authorization": f"Bearer {generate_jwt()}"}
-    file_data = [("files", (f, open(os.path.join(folder_path, f), "rb"))) for f in files]
-    data = {"mainProject": main_project_file}
-    
-    # Adiciona a imagem se houver
-    if image_path:
-        file_data.append(("image", (os.path.basename(image_path), open(image_path, "rb"))))
-    
+    file_data = []
+
     try:
+        for f in files:
+            path = os.path.join(folder_path, f)
+            print(f"[DEBUG] Adicionando arquivo: {path}")
+            file_data.append(("files", (f, open(path, "rb"))))
+
+        if image_path:
+            print(f"[DEBUG] Adicionando imagem: {image_path}")
+            file_data.append(("image", (os.path.basename(image_path), open(image_path, "rb"))))
+        
+        data = {"mainProject": main_project_file}
+        print(f"[DEBUG] Enviando POST para {API_URL}...")
         response = requests.post(API_URL, files=file_data, data=data, headers=headers)
+
+        print(f"[DEBUG] Status code: {response.status_code}")
+        print(f"[DEBUG] Resposta: {response.text}")
+
         response.raise_for_status()
         messagebox.showinfo("Sucesso", "Arquivos enviados com sucesso!")
+        print("[SUCESSO] Arquivos enviados com sucesso!")
     except requests.exceptions.RequestException as e:
+        print("[ERRO] Erro de requisição:")
+        traceback.print_exc()
         messagebox.showerror("Erro", f"Erro ao enviar os arquivos: {e}")
+    except Exception as e:
+        print("[ERRO] Erro inesperado:")
+        traceback.print_exc()
+        messagebox.showerror("Erro", f"Erro inesperado: {e}")
 
-# Criando a interface gráfica
+# GUI
 root = tk.Tk()
 root.title("Uploader de Projetos XLSX")
 root.geometry("500x500")
