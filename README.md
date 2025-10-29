@@ -1,88 +1,123 @@
-#🧾 Sistema de Estoque Web
+# 🎮 Ludoteca
 
-Sistema completo de controle de estoque, desenvolvido para gerenciar produtos, entradas, saídas e relatórios de movimentação de forma moderna e intuitiva.
-A aplicação possui versão web e versão mobile, ambas conectadas ao mesmo backend.
+Bem-vindo à **Ludoteca** — uma coleção moderna e nostálgica de **jogos clássicos da web**, recriados com muito estilo, animações suaves e uma pitada de nostalgia retrô.  
+Aqui você encontra desde o **Jogo da Forca**, **Letrix (inspirado em Wordle)**, **Jogo da Velha**, até **Tetris**, **Campo Minado** e muito mais.
+
+Visite o [site oficial da Ludoteca](https://my-ludoteca.netlify.app/)
+---
+
+## 🕹️ Visão Geral
+
+A **Ludoteca** é um projeto em **Next.js + TypeScript**, projetado para reunir diversos mini-jogos clássicos em uma única interface web interativa.  
+Cada jogo possui sua própria rota, animações dedicadas e visual padronizado com **TailwindCSS + shadcn/ui**.
+
+O objetivo é criar uma experiência leve, acessível e divertida — seja para relembrar velhos tempos ou competir com amigos em futuras versões multiplayer.
 
 ---
 
-##🚀 Funcionalidades
+## ✨ Jogos disponíveis
 
-- 📦 Cadastro de produtos (nome, código, categoria, preço, quantidade, etc.)
+| 🎯 Nome | 🧠 Tipo | 📄 Descrição |
+|---------|---------|--------------|
+| **Jogo da Forca** | Palavras | Adivinhe a palavra antes que o boneco apareça inteiro! |
+| **Letrix** | Palavras | Descubra a palavra secreta de 6 letras em até 8 tentativas! |
+| **Jogo da Velha** | Estratégia | Clássico duelo de X e O. Será que você vence o bot? |
+| **Sudoku** | Lógica | Complete a grade numérica sem repetir números. |
+| **Campo Minado** | Lógica | Evite as minas e revele todo o campo. |
+| **Tetris** | Reflexo | Empilhe blocos coloridos e forme linhas completas! |
 
-- 🔄 Controle de entradas e saídas de estoque com histórico detalhado
-
-- 🧮 Cálculo automático de saldo e alerta de produtos com baixo estoque
-
-- 📊 Dashboard interativo com gráficos e indicadores de movimentação
-
-- 🧾 Relatórios exportáveis (PDF, Excel)
-
-- 🔍 Busca e filtros avançados por nome, categoria, data, etc.
-
-- 🔐 Autenticação segura (login e logout com tokens)
-
-- 🌐 API RESTful integrada ao banco de dados PostgreSQL
-
-- 🧠 Arquitetura
+> 💡 Novos jogos estão sendo adicionados constantemente.  
+> Se um card aparecer como **"Em breve"**, é porque o jogo está em desenvolvimento.
 
 ---
 
-##O sistema foi construído seguindo uma arquitetura modular e escalável, com separação clara entre frontend, backend e banco de dados.
+## 🧩 Tecnologias utilizadas
+
+| Stack | Descrição |
+|-------|------------|
+| **Next.js 16** | Framework React moderno com App Router |
+| **TypeScript** | Tipagem estática e código mais seguro |
+| **TailwindCSS** | Estilização rápida e responsiva |
+| **shadcn/ui** | Biblioteca de componentes acessíveis e elegantes |
+| **Framer Motion** | Animações suaves e interativas |
+| **Lucide Icons** | Ícones leves e bonitos |
+| **Netlify** | Hospedagem |
 
 ---
 
-##🧰 Tecnologias utilizadas
-##🖥️ Frontend (Web)
+##⚙️ Instalação e uso
 
-- Next.js + TypeScript
+    # Clone o repositório
+    git clone https://github.com/Rodrigoscast/ludoteca.git
 
-- TailwindCSS + Shadcn/UI
+    # Entre na pasta
+    cd ludoteca
 
-- Framer Motion (animações)
+    # Instale as dependências
+    npm install
 
-- Axios (consumo de API)
+    # Rode o servidor de desenvolvimento
+    npm run dev
 
-- React Hook Form / Zod (validação)
-
-###⚙️ Backend
-
-- Node.js + Express
-
-- PostgreSQL (via pg ou Prisma)
-
-- JWT (autenticação)
-
-- Dotenv (variáveis de ambiente)
-
-- CORS configurado para o frontend e mobile
-
-##📱 Mobile
-
-- React Native (Expo)
-
-- Axios + AsyncStorage para login persistente
-
-- Interface simplificada para consulta e movimentação de estoque
+    # Abra no navegador
+    http://localhost:3000
 
 ---
 
-##📈 Outras Funcionalidades
+##🧠 Estrutura do projeto
 
-- Sistema de permissões por nível de usuário
-
-- Notificações automáticas de baixo estoque
-
-- Exportação direta para planilhas Google Sheets
-
-- Integração com ERP/Fiscal
-
-- Relatórios
+    📂 ludoteca
+     ┣ 📂 app
+     ┃ ┣ 📂 jogos
+     ┃ ┃ ┣ 📂 forca
+     ┃ ┃ ┃ ┗ 📄 page.tsx
+     ┃ ┃ ┣ 📂 letrix
+     ┃ ┃ ┃ ┗ 📄 page.tsx
+     ┃ ┃ ┣ 📂 velha
+     ┃ ┃ ┃ ┗ 📄 page.tsx
+     ┃ ┃ ┗ ...
+     ┃ ┗ 📄 page.tsx          ← Tela inicial com os cards dos jogos
+     ┣ 📂 components
+     ┃ ┣ 📂 ui                ← Componentes shadcn
+     ┃ ┗ 📄 layout.tsx
+     ┣ 📂 public
+     ┃ ┗📂 icons             ← Ícones usados nos jogos
+     ┣ 📄 package.json
+     ┣ 📄 tailwind.config.ts
+     ┗ 📄 README.md
 
 ---
 
-##🧑‍💼 Autor
+##🎨 Estilo visual
 
-Rodrigo Castro
-🎓 Engenheiro de Software
-💼 Desenvolvedor Full Stack
-🌐 LinkedIn
+-   Tema dark por padrão, com gradientes sutis e blur suave.
+-   Animações de hover, entrada e glitch com Framer Motion.
+-   Cores vivas para cada jogo, mantendo a identidade arcade.
+-   Botões e cards reativos, com efeitos de gradiente animado.
+
+---
+
+##🧑‍💻 Autor
+
+Desenvolvido com 💙 por Rodrigo Castro
+Engenheiro de Software e criador da Ludoteca.
+> Projeto sem fins lucrativos, feito para fins de estudo e nostalgia.
+
+---
+
+##⚠️ Direitos & créditos
+
+Alguns jogos da Ludoteca são recriações inspiradas em clássicos, como
+Wordle, Campo Minado, Tetris e Forca.
+Esses jogos têm regras de domínio público, mas nomes e marcas originais
+pertencem a seus respectivos criadores.
+
+  O jogo Letrix é inspirado em Termo e Wordle, sem fins lucrativos.
+
+---
+
+##🚀 Roadmap futuro
+
+-   🧑‍🤝‍🧑 Modo multiplayer online
+-   💾 Salvamento de progresso local
+-   🔊 Música e efeitos sonoros Lo-Fi
