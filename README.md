@@ -84,6 +84,6 @@ A aplicação possui versão web e versão mobile, ambas conectadas ao mesmo bac
 ## 🧑‍💼 Autor
 
 [Rodrigo Castro](https://my-ludoteca.netlify.app/)
-🎓 Engenheiro de Software
-💼 Desenvolvedor Full Stack
-🌐 [LinkedIn](https://www.linkedin.com/in/rodrigo-castro-b09847243/)
+- 🎓 Engenheiro de Software
+- 💼 Desenvolvedor Full Stack
+- 🌐 [LinkedIn](https://www.linkedin.com/in/rodrigo-castro-b09847243/)
