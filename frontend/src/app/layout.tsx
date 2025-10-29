@@ -22,8 +22,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Coforme Aço - Estoque",
-  description: "Sistema de estoque Conforme Aço",
+  title: "Estoque - Web",
+  description: "Sistema de estoque online",
 };
 
 export default function RootLayout({

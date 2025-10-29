@@ -85,12 +85,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="relative h-screen flex flex-col overflow-hidden">
       {/* Header */}
       <header className="bg-white shadow-md p-4 flex justify-between items-center w-full">
-        <h1 className="text-xl font-bold">
-          <div className="flex items-center justify-center">
-            <img src="/favicon.png" alt="Logo" className="w-10 mx-auto" />
-            <img src="/conforme-aco.png" alt="Logo" className="w-40 mx-auto" />
-          </div>
-        </h1>
         <div className="relative user-menu" ref={userMenuRef}>
           <button
             className="flex items-center gap-2 text-gray-700 hover:bg-gray-200 px-3 py-2 rounded"

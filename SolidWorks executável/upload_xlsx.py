@@ -6,7 +6,6 @@ import os
 import traceback
 
 API_URL = "http://localhost:3000/endpoint/receber-dados"
-SECRET_KEY = "populus_somnium_non_habet_finem"
 
 def generate_jwt():
     """Gera um token JWT para autenticação"""
