@@ -32,7 +32,7 @@ A aplicação possui versão web e versão mobile, ambas conectadas ao mesmo bac
 ---
 
 ##🧰 Tecnologias utilizadas
-###🖥️ Frontend (Web)
+##🖥️ Frontend (Web)
 
 - Next.js + TypeScript
 
@@ -56,7 +56,7 @@ A aplicação possui versão web e versão mobile, ambas conectadas ao mesmo bac
 
 - CORS configurado para o frontend e mobile
 
-###📱 Mobile
+##📱 Mobile
 
 - React Native (Expo)
 
