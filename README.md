@@ -2,7 +2,7 @@
 
 Sistema completo de controle de estoque, desenvolvido para gerenciar produtos, entradas, saídas e relatórios de movimentação de forma moderna e intuitiva.
 A aplicação possui versão web e versão mobile, ambas conectadas ao mesmo backend.
---
+---
 
 ## 🚀 Funcionalidades
 
